@@ -1,31 +1,25 @@
-# TODO: Replace with your team name
+# KeDaArD Coding
 
 ## Our Team
 
 TODO: Replace with your team members
 
-# Setup
-
-One person needs to follow SETUP.md to complete setup. Ignore this if it is already done for you!
-
 # How to Run the Streamlit App
 
-## Step 1: Clone the repository.
-
-In GitHub, go to your team's repository. Click on "Code" then on "SSH" and copy the output.
+## Step 1: Clone the repository (do this only ONCE).
 
 Open Cloud Shell by going to https://shell.cloud.google.com. **Make sure you are in the correct Google account!**
 
-In the terminal, type `git clone` and then paste what you copied from GitHub. You should see something like this, with your GitHub org and repository name:
+In the terminal, run the following command:
 
 ```shell
-git clone git@github.com:Github-Org-Name/my-team-repository.git
+git clone git@github.com:ISE-GenAI-TechX25-Section-B/byte-me-project.git
 ```
 
 Hit enter, and then use `cd` to change into your team's repository.
 
 ```shell
-cd my-team-repository
+cd byte-me-project
 ```
 
 ## Step 2: Run the Streamlit app.
@@ -59,8 +53,6 @@ following command to build the container and start the server locally.
 **Note:** This also outputs the same local URL that the previous command output. The only difference is that instead of running the webapp on *your* Cloud Shell, it is running it *within a Docker container*. Don't worry too much about understanding this now, but **if this command fails, your automatic deployment through GitHub Actions will also fail**.
 
 ## Step 4: Manual deployment.
-
-First, make sure someone in your team has gone through the steps in SETUP.md. Make sure you have ***Owners*** permission on the GCP project in IAM.
 
 Run the following command to deploy your webapp.
 

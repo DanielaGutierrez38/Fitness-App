@@ -9,13 +9,13 @@ Open Cloud Shell by going to https://shell.cloud.google.com. **Make sure you are
 In the terminal, type `git clone ` and then paste what you copied from GitHub. You should see something like this, with your GitHub org and repository name:
 
 ```shell
-git clone git@github.com:Github-Org-Name/my-team-repository.git
+git clone git@github.com:ISE-GenAI-TechX25-Section-B/byte-me-project.git
 ```
 
 Hit enter, and then use `cd` to change into your team's repository.
 
 ```shell
-cd my-team-repository
+cd byte-me-project
 ```
 
 ## Step 2: Run setup script (ONE PERSON).
@@ -39,11 +39,11 @@ When all 5 bash variables are filled in (do NOT put "" around any of the values)
 This should output something like the following:
 
 ```shell
-PROJECT_ID: 'melissakohltechx25'
-SERVICE_NAME: 'my-ai-shoe-webapp'
-SERVICE_REGION: 'us-central1'
-SERVICE_ACCOUNT: '354393498738-compute@developer.gserviceaccount.com'
-WORKLOAD_IDENTITY_PROVIDER: 'projects/354393498738/locations/global/workloadIdentityPools/github-provider/providers/github-project-repo'
+  PROJECT_ID: 'dagutierrez17techx25'
+  SERVICE_NAME: 'byte-me'
+  SERVICE_REGION: 'us-central1'
+  SERVICE_ACCOUNT: '448396183502-compute@developer.gserviceaccount.com'
+  WORKLOAD_IDENTITY_PROVIDER: 'projects/448396183502/locations/global/workloadIdentityPools/github-provider/providers/github-project-repo'
 ```
 ## Step 3: Copy output into cloud-run.yml (ONE PERSON).
 
