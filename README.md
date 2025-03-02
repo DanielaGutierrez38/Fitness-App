@@ -2,7 +2,7 @@
 
 ## Our Team
 
-TODO: Replace with your team members
+Darianne Sinclair
 
 # How to Run the Streamlit App
 
