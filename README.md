@@ -3,6 +3,7 @@
 ## Our Team
 
 Darianne Sinclair
+Daniela Gutierrez
 
 # How to Run the Streamlit App
 
