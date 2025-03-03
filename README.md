@@ -4,6 +4,7 @@
 
 Darianne Sinclair
 Daniela Gutierrez
+Ariana Phillips
 
 # How to Run the Streamlit App
 
