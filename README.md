@@ -2,9 +2,10 @@
 
 ## Our Team
 
-Darianne Sinclair
-Daniela Gutierrez
-Ariana Phillips
+- Darianne Sinclair
+- Daniela Gutierrez
+- Ariana Phillips
+- Kei Sanabria
 
 # How to Run the Streamlit App
 
