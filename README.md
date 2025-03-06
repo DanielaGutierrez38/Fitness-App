@@ -9,6 +9,10 @@
 
 # How to Run the Streamlit App
 
+### Running the Streamlit app locally
+1. Run app.py
+2. Enter http://127.0.0.1:8080 in your web browser while app.py runs
+
 ## Step 1: Clone the repository (do this only ONCE).
 
 Open Cloud Shell by going to https://shell.cloud.google.com. **Make sure you are in the correct Google account!**
