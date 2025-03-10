@@ -45,10 +45,6 @@ def display_recent_workouts(workouts_list):
 
 
 def display_genai_advice(timestamp, content, image):
-<<<<<<< HEAD
-=======
-    
->>>>>>> 1833dc1 (update modules with genai advice implementation)
     genai_advice = get_genai_advice('user1')
 
     timestamp = genai_advice['timestamp']
@@ -59,11 +55,3 @@ def display_genai_advice(timestamp, content, image):
 
     image = genai_advice['image']
     st.image(image)
-<<<<<<< HEAD
-=======
-
-
-
-
-    
->>>>>>> 1833dc1 (update modules with genai advice implementation)
