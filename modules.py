@@ -7,8 +7,9 @@
 # function other than the example.
 #############################################################################
 
+import streamlit as st
 from internals import create_component
-
+from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts
 
 # This one has been written for you as an example. You may change it as wanted.
 def display_my_custom_component(value):
@@ -40,11 +41,14 @@ def display_activity_summary(workouts_list):
 
 
 def display_recent_workouts(workouts_list):
-    """Write a good docstring here."""
     pass
 
 
 def display_genai_advice(timestamp, content, image):
+<<<<<<< HEAD
+=======
+    
+>>>>>>> 1833dc1 (update modules with genai advice implementation)
     genai_advice = get_genai_advice('user1')
 
     timestamp = genai_advice['timestamp']
@@ -55,3 +59,11 @@ def display_genai_advice(timestamp, content, image):
 
     image = genai_advice['image']
     st.image(image)
+<<<<<<< HEAD
+=======
+
+
+
+
+    
+>>>>>>> 1833dc1 (update modules with genai advice implementation)
