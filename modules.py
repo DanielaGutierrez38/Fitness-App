@@ -45,5 +45,13 @@ def display_recent_workouts(workouts_list):
 
 
 def display_genai_advice(timestamp, content, image):
-    """Write a good docstring here."""
-    pass
+    genai_advice = get_genai_advice('user1')
+
+    timestamp = genai_advice['timestamp']
+    st.subheader(f" :blue[{timestamp}]", divider="green")
+
+    content = genai_advice['content']
+    st.title(f" :red[{content}]")
+
+    image = genai_advice['image']
+    st.image(image)
