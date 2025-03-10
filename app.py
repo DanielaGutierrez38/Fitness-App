@@ -20,6 +20,9 @@ def display_app_page():
     value = st.text_input('Enter your name')
     display_my_custom_component(value)
 
+    advice = get_genai_advice(userId)
+    display_genai_advice(advice['timestamp'], advice['content'], advice['image'])
+
 
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':
