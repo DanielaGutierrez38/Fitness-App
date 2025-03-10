@@ -31,9 +31,21 @@ class TestDisplayActivitySummary(unittest.TestCase):
 class TestDisplayGenAiAdvice(unittest.TestCase):
     """Tests the display_genai_advice function."""
 
-    def test_foo(self):
-        """Tests foo."""
-        pass
+    def test_app_runs(self):
+        at = AppTest.from_file("app.py")
+        at.run()
+        assert not at.exception
+   
+    def test_elements_appear(self):
+        #This test was generated with help by Gemini, still, its not really passing, im not too sure why
+        at = AppTest.from_file("app.py")
+        at.run()
+
+        self.assertTrue(at.subheader[0].exists())
+        self.assertTrue(at.title[0].exists())
+        self.assertTrue(at.image[0].exists())
+        self.assertTrue(at.subheader[0].divider == "green")
+        self.assertTrue(at.title[0].color == "red")
 
 
 class TestDisplayRecentWorkouts(unittest.TestCase):
