@@ -8,6 +8,7 @@
 #############################################################################
 
 from internals import create_component
+import streamlit as st
 
 
 # This one has been written for you as an example. You may change it as wanted.
@@ -39,15 +40,70 @@ def display_post(username, user_image, timestamp, content, post_image):
         content (str): The content of the post.
         post_image (str): The URL or path to the image associated with the post.
     """
-    data = {
-        'USERNAME': username,
-        'USER_IMAGE': user_image,
-        'TIMESTAMP': timestamp,
-        'CONTENT': content,
-        'POST_IMAGE': post_image,
+    post = {
+        "timestamp": timestamp,
+        "post_image": post_image,
+        "username": username,
+        "content": content,
+        "user_image": user_image
     }
-    html_file_name = "display_post"
-    create_component(data, html_file_name)
+    
+    # Custom CSS for colored rows
+    st.markdown(
+        """
+        <style>
+        .post-container {
+            border-radius: 10px; /* Rounded corners for the entire post */
+            overflow: hidden; /* Ensure child elements respect the border radius */
+            border: 1px solid #ddd; /* Optional: Add a border for better visibility */
+        }
+        .user-box {
+            background-color: #4285F4; /* Google's blue color */
+            padding: 10px;
+        }
+        .user-row {
+            display: flex;
+            align-items: center;
+        }
+        .user-row img {
+            border-radius: 50%;
+            margin-right: 10px;
+            height: 50px; /* Set the height of the user image */
+            width: 50px; /* Set the width of the user image */
+            object-fit: cover; /* Prevent the image from stretching */
+        }
+        .timestamp-row {
+            background-color: #FBBC05; /* Google's yellow color */
+            padding: 10px;
+            display: flex;
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            height: 50px; /* Set a fixed height for vertical centering */
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Post container with rounded corners
+    st.markdown(
+        f"""
+        <div class="post-container">
+            <div class="user-box">
+                <div class="user-row">
+                    <img src="{post['user_image']}">
+                    <h3>{post['username']}</h3>
+                </div>
+                <p>{post['content']}</p>
+            </div>
+            <img src="{post['post_image']}" style="width: 100%; height: auto;">
+            <div class="timestamp-row">
+                <p>Posted on: {post['timestamp']}</p>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 
 def display_activity_summary(workouts_list):
