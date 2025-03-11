@@ -45,13 +45,16 @@ def display_recent_workouts(workouts_list):
 
 
 def display_genai_advice(timestamp, content, image):
-    genai_advice = get_genai_advice('user1')
+    genai_advice = get_genai_advice('user1') #get data from data_fetcher
 
+    #get timestamp and display it 
     timestamp = genai_advice['timestamp']
     st.subheader(f" :blue[{timestamp}]", divider="green")
 
+    #get motivational message and display it
     content = genai_advice['content']
     st.title(f" :red[{content}]")
 
+    #get image and display it 
     image = genai_advice['image']
     st.image(image)

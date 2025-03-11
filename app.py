@@ -20,7 +20,9 @@ def display_app_page():
     value = st.text_input('Enter your name')
     display_my_custom_component(value)
 
+    #call get genAI advice
     advice = get_genai_advice(userId)
+    #call method in modules that displays the genAI advice
     display_genai_advice(advice['timestamp'], advice['content'], advice['image'])
 
 
