@@ -28,10 +28,26 @@ def display_my_custom_component(value):
     html_file_name = "my_custom_component"
     create_component(data, html_file_name)
 
-
+# Function partially created by Copilot with "implement display_post to look like the image: (insert Mockup of display_post)"
 def display_post(username, user_image, timestamp, content, post_image):
-    """Write a good docstring here."""
-    pass
+    """Displays a post with the given details.
+
+    Args:
+        username (str): The username of the person who made the post.
+        user_image (str): The URL or path to the user's profile image.
+        timestamp (str): The time when the post was made.
+        content (str): The content of the post.
+        post_image (str): The URL or path to the image associated with the post.
+    """
+    data = {
+        'USERNAME': username,
+        'USER_IMAGE': user_image,
+        'TIMESTAMP': timestamp,
+        'CONTENT': content,
+        'POST_IMAGE': post_image,
+    }
+    html_file_name = "display_post"
+    create_component(data, html_file_name)
 
 
 def display_activity_summary(workouts_list):
