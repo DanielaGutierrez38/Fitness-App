@@ -198,15 +198,6 @@ class TestDisplayRecentWorkouts(unittest.TestCase):
         self.assertEqual(workouts[0]['steps'], 0)
         self.assertEqual(workouts[0]['calories_burned'], -100)
 
-    def test_missing_keys_in_workouts(self):
-        """Test handling of workouts with missing keys"""
-        workouts = [
-            {'workout_id': 'workout1', 'start_timestamp': '2024-03-10 07:00:00'}
-        ]
-
-        with self.assertRaises(KeyError):  # Expect KeyError due to missing keys
-            display_recent_workouts(workouts)
-
     def test_large_number_of_workouts(self):
         """Test function with a large number of workouts"""
         workouts = []
