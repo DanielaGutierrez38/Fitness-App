@@ -63,57 +63,30 @@ class TestDisplayPost(unittest.TestCase):
 class TestDisplayActivitySummary(unittest.TestCase):
     """Tests the display_activity_summary function."""
     
-    #work properly
     def test_function_runs_without_error(self):
         sample_workouts = [
-            {"start": "2025-03-01 08:00", "end": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories": 400},
-            {"start": "2025-03-02 08:30", "end": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories": 550},
+        {"start_timestamp": "2025-03-01 08:00", "end_timestamp": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories_burned": 400},
+        {"start_timestamp": "2025-03-02 08:30", "end_timestamp": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories_burned": 550},
         ]
-        try:
-            display_activity_summary(sample_workouts)
-        except Exception as e:
-            self.fail(f"Function raised an exception {e} unexpectedly!")
-    
-    """Test that the summary table is rendered, uses placeholders for the streamlit environement"""
+    try:
+        display_activity_summary(sample_workouts)
+    except Exception as e:
+        self.fail(f"Function raised an exception {e} unexpectedly!")
+
     def test_table_renders(self):
+        """Test that the summary table is rendered, uses placeholders for the Streamlit environment"""
         sample_workouts = [
-            {"start": "2025-03-01 08:00", "end": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories": 400},
-            {"start": "2025-03-02 08:30", "end": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories": 550},
+            {"start_timestamp": "2025-03-01 08:00", "end_timestamp": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories_burned": 400},
+            {"start_timestamp": "2025-03-02 08:30", "end_timestamp": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories_burned": 550},
         ]
         table_output = display_activity_summary(sample_workouts)  
         self.assertIsNotNone(table_output, "Summary table should be rendered.")
-    
-    """Test that the graph is rendered, uses placeholders for the streamlit environement"""
+
     def test_graph_renders(self):
+        """Test that the graph is rendered, uses placeholders for the Streamlit environment"""
         sample_workouts = [
-            {"start": "2025-03-01 08:00", "end": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories": 400},
-            {"start": "2025-03-02 08:30", "end": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories": 550},
-        ]
-        graph_output = display_activity_summary(sample_workouts)  # Assuming this returns a graph
-        self.assertIsNotNone(graph_output, "Graph should be rendered.")
-        sample_workouts = [
-            {"start": "2025-03-01 08:00", "end": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories": 400},
-            {"start": "2025-03-02 08:30", "end": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories": 550},
-        ]
-        try:
-            display_activity_summary(sample_workouts)
-        except Exception as e:
-            self.fail(f"Function raised an exception {e} unexpectedly!")
-    
-    """Test that the summary table is rendered, uses placeholders for the streamlit environement"""
-    def test_table_renders(self):
-        sample_workouts = [
-            {"start": "2025-03-01 08:00", "end": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories": 400},
-            {"start": "2025-03-02 08:30", "end": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories": 550},
-        ]
-        table_output = display_activity_summary(sample_workouts)  
-        self.assertIsNotNone(table_output, "Summary table should be rendered.")
-    
-    """Test that the graph is rendered, uses placeholders for the streamlit environement"""
-    def test_graph_renders(self):
-        sample_workouts = [
-            {"start": "2025-03-01 08:00", "end": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories": 400},
-            {"start": "2025-03-02 08:30", "end": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories": 550},
+            {"start_timestamp": "2025-03-01 08:00", "end_timestamp": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories_burned": 400},
+            {"start_timestamp": "2025-03-02 08:30", "end_timestamp": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories_burned": 550},
         ]
         graph_output = display_activity_summary(sample_workouts)  # Assuming this returns a graph
         self.assertIsNotNone(graph_output, "Graph should be rendered.")
