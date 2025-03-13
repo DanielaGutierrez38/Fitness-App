@@ -166,12 +166,21 @@ def display_genai_advice(timestamp, content, image):
 
     #get timestamp and display it 
     timestamp = genai_advice['timestamp']
-    st.subheader(f" :blue[{timestamp}]", divider="green")
+    if timestamp is not None:
+        st.subheader(f" :blue[{timestamp}]", divider="green")
+    else:
+        st.subheader(f" :blue[No timestamp available]", divider="green")
 
     #get motivational message and display it
     content = genai_advice['content']
-    st.title(f" :red[{content}]")
+    if content is not None:
+        st.title(f" :red[{content}]")
+    else:
+        st.title(f" :red[No motivational message available]")
 
     #get image and display it  
     image = genai_advice['image']
-    st.image(image)
+    if image is not None:
+        st.image(image)
+    else:
+        st.title(f" :red[No image available]")
