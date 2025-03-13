@@ -61,10 +61,61 @@ class TestDisplayPost(unittest.TestCase):
 
 class TestDisplayActivitySummary(unittest.TestCase):
     """Tests the display_activity_summary function."""
-
-    def test_foo(self):
-        """Tests foo."""
-        pass
+    
+    #work properly
+    def test_function_runs_without_error(self):
+        sample_workouts = [
+            {"start": "2025-03-01 08:00", "end": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories": 400},
+            {"start": "2025-03-02 08:30", "end": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories": 550},
+        ]
+        try:
+            display_activity_summary(sample_workouts)
+        except Exception as e:
+            self.fail(f"Function raised an exception {e} unexpectedly!")
+    
+    """Test that the summary table is rendered, uses placeholders for the streamlit environement"""
+    def test_table_renders(self):
+        sample_workouts = [
+            {"start": "2025-03-01 08:00", "end": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories": 400},
+            {"start": "2025-03-02 08:30", "end": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories": 550},
+        ]
+        table_output = display_activity_summary(sample_workouts)  
+        self.assertIsNotNone(table_output, "Summary table should be rendered.")
+    
+    """Test that the graph is rendered, uses placeholders for the streamlit environement"""
+    def test_graph_renders(self):
+        sample_workouts = [
+            {"start": "2025-03-01 08:00", "end": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories": 400},
+            {"start": "2025-03-02 08:30", "end": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories": 550},
+        ]
+        graph_output = display_activity_summary(sample_workouts)  # Assuming this returns a graph
+        self.assertIsNotNone(graph_output, "Graph should be rendered.")
+        sample_workouts = [
+            {"start": "2025-03-01 08:00", "end": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories": 400},
+            {"start": "2025-03-02 08:30", "end": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories": 550},
+        ]
+        try:
+            display_activity_summary(sample_workouts)
+        except Exception as e:
+            self.fail(f"Function raised an exception {e} unexpectedly!")
+    
+    """Test that the summary table is rendered, uses placeholders for the streamlit environement"""
+    def test_table_renders(self):
+        sample_workouts = [
+            {"start": "2025-03-01 08:00", "end": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories": 400},
+            {"start": "2025-03-02 08:30", "end": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories": 550},
+        ]
+        table_output = display_activity_summary(sample_workouts)  
+        self.assertIsNotNone(table_output, "Summary table should be rendered.")
+    
+    """Test that the graph is rendered, uses placeholders for the streamlit environement"""
+    def test_graph_renders(self):
+        sample_workouts = [
+            {"start": "2025-03-01 08:00", "end": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories": 400},
+            {"start": "2025-03-02 08:30", "end": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories": 550},
+        ]
+        graph_output = display_activity_summary(sample_workouts)  # Assuming this returns a graph
+        self.assertIsNotNone(graph_output, "Graph should be rendered.")
 
 
 class TestDisplayGenAiAdvice(unittest.TestCase):
@@ -84,6 +135,15 @@ class TestDisplayGenAiAdvice(unittest.TestCase):
         #test that the image displays correctly
         display_genai_advice(timestamp, content, image)
         mock_image.assert_called_with(image)
+    
+    @patch("streamlit.title")
+    def test_content_appears(self, mock_title):
+        timestamp = "2024-01-01 00:00:00"
+        content = "You're doing great! Keep up the good work." 
+        image = "https://plus.unsplash.com/premium_photo-1669048780129-051d670fa2d1?q=80&w=3870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+
+        display_genai_advice(timestamp, content, image)
+        mock_image.assert_called_with(content)        
 
 class TestDisplayRecentWorkouts(unittest.TestCase):
     

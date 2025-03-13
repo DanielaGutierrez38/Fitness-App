@@ -19,15 +19,14 @@ def display_app_page():
     """Displays the home page of the app."""
     st.title('Welcome to SDS!')
 
-    # Create tabs
-    tab1, tab2 = st.tabs(["Home", "Posts"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Home", "GenAI Advice", "Activity Summary", "Recent Workouts"])
+    userId = None # Example data
 
     with tab1:
         # An example of displaying a custom component called "my_custom_component"
         value = st.text_input('Enter your name')
         display_my_custom_component(value)
-        
-    with tab2:
+
         # Sample data
         post = {
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -38,13 +37,20 @@ def display_app_page():
         }
 
         display_post(post["username"], post["user_image"], post["timestamp"], post["content"], post["post_image"])
+        
+    with tab2:
+        advice = get_genai_advice(userId)
+        #call method in modules that displays the genAI advice
+        display_genai_advice(advice['timestamp'], advice['content'], advice['image'])
+    
+    with tab3:
+        # Fetch user workouts and display activity summary
+        workouts = get_user_workouts(userId)  # Fetch workouts for the user
+        display_activity_summary(workouts)  # Pass workouts to display activity summary
 
-
-    #call get genAI advice
-    advice = get_genai_advice(userId)
-    #call method in modules that displays the genAI advice
-    display_genai_advice(advice['timestamp'], advice['content'], advice['image'])
-
+    with tab4:
+        workouts = get_user_workouts('user1')
+        display_recent_workouts(workouts)
 
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':

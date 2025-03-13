@@ -10,6 +10,8 @@
 import streamlit as st
 from internals import create_component
 import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
 
 # Import for display_post
 import requests
@@ -152,34 +154,49 @@ def display_post(username, user_image, timestamp, content, post_image):
 
 
 def display_activity_summary(workouts_list):
-    """Write a good docstring here."""
-    pass
+    # Convert the workouts data into a DataFrame for easy display
+    df = pd.DataFrame(workouts_list)
+
+    # Display a table with the workout summary
+    st.subheader("Activity Summary")
+    st.dataframe(df)
+
+    # Create a bar plot of the distance vs. calories burned
+    #GEN AI citation: I asked AI for help to determine the correct values for the graph, ensuring values are displayed accurately
+    fig, ax = plt.subplots()
+    ax.bar(df['start_timestamp'], df['distance'], color='blue', label='Distance (km)')
+    ax.set_xlabel('Start Time')
+    ax.set_ylabel('Distance (km)')
+    ax.set_title('Distance vs. Time')
+
+    # Add another bar plot for calories burned
+    ax2 = ax.twinx()
+    ax2.plot(df['start_timestamp'], df['calories_burned'], color='red', label='Calories', marker='o')
+    ax2.set_ylabel('Calories')
+    ax2.legend(loc='upper left')
+
+    st.pyplot(fig)
 
 
 def display_recent_workouts(workouts_list):
     if not workouts_list:
-        return "No recent workouts. Let's get started!"
+        st.write("No recent workouts. Let's get started!")
+        return
 
-        # Sort workouts by start time (most recent first)
+    #Gemini was used in this method to create the table using DataFrame
+    # Sort workouts by start time (most recent first)
     workouts_list.sort(key=lambda x: x['start_timestamp'], reverse=True)
 
-    output = []
-    output.append(f"Here is a list of your most recent workout(s) {user_id}:")
+    # Convert workouts_list into a DataFrame for easier display in table form
+    df = pd.DataFrame(workouts_list)
 
-    for workout in workouts_list:
-        output.append(f"Workout ID: {workout['workout_id']}")
-        output.append(f"Start Time: {workout['start_timestamp']}")
-        output.append(f"End Time: {workout['end_timestamp']}")
-        output.append(f"Start Location: {workout['start_lat_lng']}")
-        output.append(f"End Location: {workout['end_lat_lng']}")
-        output.append(f"Distance: {workout['distance']} km")
-        output.append(f"Steps: {workout['steps']}")
-        output.append(f"Calories Burned: {workout['calories_burned']}")
-        output.append("")
+    # Rename columns for better readability
+    df.columns = ['Workout ID', 'Start Time', 'End Time', 'Start Location', 'End Location', 'Distance (km)', 'Steps', 'Calories Burned']
 
-    result = "\n".join(output)
-    print(result)  # Still print for normal usage
-    return result  # Also return for testing
+    st.write("Here is a list of your most recent workout(s):")
+    
+    # Display the DataFrame as a table
+    st.table(df)
 
 
 def display_genai_advice(timestamp, content, image):
