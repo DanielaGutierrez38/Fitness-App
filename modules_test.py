@@ -63,6 +63,7 @@ class TestDisplayPost(unittest.TestCase):
 class TestDisplayActivitySummary(unittest.TestCase):
     """Tests the display_activity_summary function."""
     
+    #ChatGPT helped write the syntax for these tests 
     def test_function_runs_without_error(self):
         sample_workouts = [
         {"start_timestamp": "2025-03-01 08:00", "end_timestamp": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories_burned": 400},
@@ -192,9 +193,6 @@ class TestDisplayRecentWorkouts(unittest.TestCase):
 
         display_recent_workouts(workouts)
         self.assertEqual(len(workouts), 100)  # Ensure all workouts are processed
-
-
-
 
 if __name__ == "__main__":
     unittest.main()
