@@ -138,7 +138,6 @@ class TestDisplayGenAiAdvice(unittest.TestCase):
         mock_image.assert_called_with(image)  
 
 class TestDisplayRecentWorkouts(unittest.TestCase):
-    
     def test_empty_workouts_list(self):
         """Test when the workouts list is empty"""
         result = display_recent_workouts([])
@@ -147,15 +146,14 @@ class TestDisplayRecentWorkouts(unittest.TestCase):
     def test_single_workout_entry(self):
         """Test when there is a single workout"""
         workouts = [{
+            'workout_id': 'workout1',
             'start_timestamp': '2024-03-10 08:00:00',
-            'Workout ID': 1,
-            'Start Time': '08:00 AM',
-            'End Time': '08:30 AM',
-            'Start Location': 2.36,
-            'End Location': 1.5444,
-            'Distance (km)': 5.2,
-            'Steps': 6000,
-            'Calories Burned': 300
+            'end_timestamp': '2024-03-10 08:30:00',
+            'start_lat_lng': 2.36,
+            'end_lat_lng': 1.5444,
+            'distance': 5.2,
+            'steps': 6000,
+            'calories_burned': 300
         }]
         result = display_recent_workouts(workouts)
         self.assertIsNone(result)
@@ -163,47 +161,47 @@ class TestDisplayRecentWorkouts(unittest.TestCase):
     def test_multiple_workouts_sorted(self):
         """Test multiple workouts sorted by timestamp"""
         workouts = [
-            {'start_timestamp': '2024-03-10 08:00:00', 'Workout ID': 1, 'Start Time': '08:00 AM', 'End Time': '08:30 AM',
-             'Start Location': 2.0, 'End Location': 2.0, 'Distance (km)': 5.2, 'Steps': 6000, 'Calories Burned': 300},
+            {'workout_id': 'workout1', 'start_timestamp': '2024-03-10 08:00:00', 'end_timestamp': '2024-03-10 08:30:00',
+            'start_lat_lng': 2.0, 'end_lat_lng': 2.0, 'distance': 5.2, 'steps': 6000, 'calories_burned': 300},
 
-            {'start_timestamp': '2024-03-11 09:00:00', 'Workout ID': 2, 'Start Time': '09:00 AM', 'End Time': '09:45 AM',
-             'Start Location': 2.0, 'End Location': 2.0, 'Distance (km)': 3.0, 'Steps': 4000, 'Calories Burned': 250}
+            {'workout_id': 'workout2', 'start_timestamp': '2024-03-11 09:00:00', 'end_timestamp': '2024-03-11 09:45:00',
+            'start_lat_lng': 2.0, 'end_lat_lng': 2.0, 'distance': 3.0, 'steps': 4000, 'calories_burned': 250}
         ]
 
         display_recent_workouts(workouts)
-        self.assertEqual(workouts[0]['Workout ID'], 2)  # Most recent should be first
-        self.assertEqual(workouts[1]['Workout ID'], 1)  # Older should be second
+        self.assertEqual(workouts[0]['workout_id'], 'workout2')  # Most recent should be first
+        self.assertEqual(workouts[1]['workout_id'], 'workout1')  # Older should be second
 
     def test_workouts_with_same_start_time(self):
         """Test multiple workouts with the same timestamp"""
         workouts = [
-            {'start_timestamp': '2024-03-11 09:00:00', 'Workout ID': 1, 'Start Time': '09:00 AM', 'End Time': '09:45 AM',
-             'Start Location': 2.0, 'End Location': 2.0, 'Distance (km)': 3.0, 'Steps': 4000, 'Calories Burned': 250},
+            {'workout_id': 'workout1', 'start_timestamp': '2024-03-11 09:00:00', 'end_timestamp': '2024-03-11 09:45:00',
+            'start_lat_lng': 2.0, 'end_lat_lng': 2.0, 'distance': 3.0, 'steps': 4000, 'calories_burned': 250},
 
-            {'start_timestamp': '2024-03-11 09:00:00', 'Workout ID': 2, 'Start Time': '09:00 AM', 'End Time': '09:45 AM',
-             'Start Location': 2.0, 'End Location': 2.0, 'Distance (km)': 4.0, 'Steps': 5000, 'Calories Burned': 300}
+            {'workout_id': 'workout2', 'start_timestamp': '2024-03-11 09:00:00', 'end_timestamp': '2024-03-11 09:45:00',
+            'start_lat_lng': 2.0, 'end_lat_lng': 2.0, 'distance': 4.0, 'steps': 5000, 'calories_burned': 300}
         ]
 
         display_recent_workouts(workouts)
         self.assertEqual(len(workouts), 2)  # Both workouts should be displayed
-        self.assertEqual(workouts[0]['Workout ID'], 1)  # Order should be unchanged
+        self.assertEqual(workouts[0]['workout_id'], 'workout1')  # Order should be unchanged
 
     def test_workout_with_zero_and_negative_values(self):
         """Test workout with zero and negative values"""
         workouts = [
-            {'start_timestamp': '2024-03-10 07:00:00', 'Workout ID': 1, 'Start Time': '07:00 AM', 'End Time': '07:30 AM',
-             'Start Location': 2.0, 'End Location': 2.0, 'Distance (km)': 0, 'Steps': 0, 'Calories Burned': -100}
+            {'workout_id': 'workout1', 'start_timestamp': '2024-03-10 07:00:00', 'end_timestamp': '2024-03-10 07:30:00',
+            'start_lat_lng': 2.0, 'end_lat_lng': 2.0, 'distance': 0, 'steps': 0, 'calories_burned': -100}
         ]
 
         display_recent_workouts(workouts)
-        self.assertEqual(workouts[0]['Distance (km)'], 0)
-        self.assertEqual(workouts[0]['Steps'], 0)
-        self.assertEqual(workouts[0]['Calories Burned'], -100)
+        self.assertEqual(workouts[0]['distance'], 0)
+        self.assertEqual(workouts[0]['steps'], 0)
+        self.assertEqual(workouts[0]['calories_burned'], -100)
 
     def test_missing_keys_in_workouts(self):
         """Test handling of workouts with missing keys"""
         workouts = [
-            {'start_timestamp': '2024-03-10 07:00:00', 'Workout ID': 1, 'Start Time': '07:00 AM'}
+            {'workout_id': 'workout1', 'start_timestamp': '2024-03-10 07:00:00'}
         ]
 
         with self.assertRaises(KeyError):  # Expect KeyError due to missing keys
@@ -214,19 +212,19 @@ class TestDisplayRecentWorkouts(unittest.TestCase):
         workouts = []
         for i in range(100):
             workouts.append({
+                'workout_id': f'workout{i}',
                 'start_timestamp': f'2024-03-{10 + i} 07:00:00',
-                'Workout ID': i,
-                'Start Time': '07:00 AM',
-                'End Time': '07:30 AM',
-                'Start Location': 2.0,
-                'End Location': 2.0,
-                'Distance (km)': 5.0,
-                'Steps': 6000,
-                'Calories Burned': 300
+                'end_timestamp': f'2024-03-{10 + i} 07:30:00',
+                'start_lat_lng': 2.0,
+                'end_lat_lng': 2.0,
+                'distance': 5.0,
+                'steps': 6000,
+                'calories_burned': 300
             })
 
         display_recent_workouts(workouts)
         self.assertEqual(len(workouts), 100)  # Ensure all workouts are processed
+
 
 
 
