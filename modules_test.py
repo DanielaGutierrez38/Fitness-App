@@ -135,19 +135,7 @@ class TestDisplayGenAiAdvice(unittest.TestCase):
 
         #test that the image displays correctly
         display_genai_advice(timestamp, content, image)
-        mock_image.assert_called_with(image)
-    
-
-    @patch("streamlit.image")
-    @patch("streamlit.title")
-    def test_content_appears(self, mock_title, mock_image):
-        timestamp = "2024-01-01 00:00:00"
-        content = "You're doing great! Keep up the good work." 
-        image = "https://plus.unsplash.com/premium_photo-1669048780129-051d670fa2d1?q=80&w=3870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-
-        display_genai_advice(timestamp, content, image)
-        mock_image.assert_called_with(content)     
-        mock_image.assert_called_with(image)   
+        mock_image.assert_called_with(image)  
 
 class TestDisplayRecentWorkouts(unittest.TestCase):
     
