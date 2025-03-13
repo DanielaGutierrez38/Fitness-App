@@ -157,7 +157,29 @@ def display_activity_summary(workouts_list):
 
 
 def display_recent_workouts(workouts_list):
-    pass
+    if not workouts_list:
+        return "No recent workouts. Let's get started!"
+
+        # Sort workouts by start time (most recent first)
+    workouts_list.sort(key=lambda x: x['start_timestamp'], reverse=True)
+
+    output = []
+    output.append(f"Here is a list of your most recent workout(s) {user_id}:")
+
+    for workout in workouts_list:
+        output.append(f"Workout ID: {workout['workout_id']}")
+        output.append(f"Start Time: {workout['start_timestamp']}")
+        output.append(f"End Time: {workout['end_timestamp']}")
+        output.append(f"Start Location: {workout['start_lat_lng']}")
+        output.append(f"End Location: {workout['end_lat_lng']}")
+        output.append(f"Distance: {workout['distance']} km")
+        output.append(f"Steps: {workout['steps']}")
+        output.append(f"Calories Burned: {workout['calories_burned']}")
+        output.append("")
+
+    result = "\n".join(output)
+    print(result)  # Still print for normal usage
+    return result  # Also return for testing
 
 
 def display_genai_advice(timestamp, content, image):

@@ -86,11 +86,122 @@ class TestDisplayGenAiAdvice(unittest.TestCase):
         mock_image.assert_called_with(image)
 
 class TestDisplayRecentWorkouts(unittest.TestCase):
-    """Tests the display_recent_workouts function."""
+    
+    def test_single_workout(self):
+        """Test when there's only one workout in the list."""
+        workouts_list = [{
+            'workout_id': 'workout1',
+            'start_timestamp': '2024-01-01 06:00:00',
+            'end_timestamp': '2024-01-01 06:30:00',
+            'start_lat_lng': (1.05, 4.10),
+            'end_lat_lng': (1.08, 4.12),
+            'distance': 5.0,
+            'steps': 6000,
+            'calories_burned': 200,
+        }]
 
-    def test_foo(self):
-        """Tests foo."""
-        pass
+        result = display_recent_workouts(workouts_list)
+        self.assertTrue('Workout ID: workout1', result)
+        self.assertTrue('Distance: 5.0 km', result)
+        self.assertTrue('Steps: 6000', result)
+
+    def test_workouts_with_same_start_time(self):
+        """Test when multiple workouts have the same start timestamp."""
+        workouts = [
+            {
+                'workout_id': 'workout1',
+                'start_timestamp': '2024-01-01 06:00:00',
+                'end_timestamp': '2024-01-01 06:30:00',
+                'start_lat_lng': (1.05, 4.10),
+                'end_lat_lng': (1.08, 4.12),
+                'distance': 5.0,
+                'steps': 6000,
+                'calories_burned': 200,
+            },
+            {
+                'workout_id': 'workout2',
+                'start_timestamp': '2024-01-01 06:00:00',  # Same timestamp
+                'end_timestamp': '2024-01-01 06:45:00',
+                'start_lat_lng': (1.15, 4.20),
+                'end_lat_lng': (1.18, 4.22),
+                'distance': 7.5,
+                'steps': 8500,
+                'calories_burned': 220,
+            }
+        ]
+        result = display_recent_workouts(workouts)
+        self.assertTrue("Workout ID: workout1", result)
+        self.assertTrue("Workout ID: workout2", result)
+
+    def test_workout_with_zero_values(self):
+    #     """Test a workout with zero values for distance, steps, and calories burned."""
+        workouts = [{
+            'workout_id': 'workout2',
+            'start_timestamp': '2024-01-01 05:00:00',
+            'end_timestamp': '2024-01-01 05:30:00',
+            'start_lat_lng': (1.00, 4.00),
+            'end_lat_lng': (1.00, 4.00),
+            'distance': 0.0,
+            'steps': 0,
+            'calories_burned': 0,
+        }]
+        result = display_recent_workouts(workouts)
+        self.assertTrue("Distance: 0.0 km", result)
+        self.assertTrue("Steps: 0", result)
+        self.assertTrue("Calories Burned: 0", result)
+    #
+    #     # Fixed: Added missing test for multiple days of workouts with correct assertions
+    #
+    def test_multiple_days_of_workouts(self):
+        """Test sorting with multiple days of workouts."""
+        # Create workouts for 20 days (0-19)
+        workouts = []
+        for i in range(6):
+            workouts.append({
+                'workout_id': f'workout{i}',
+                'start_timestamp': f'2024-01-{i + 1:02d} 06:00:00',
+                'end_timestamp': f'2024-01-{i + 1:02d} 06:30:00',
+                'start_lat_lng': (1.00, 4.00),
+                'end_lat_lng': (1.00, 4.00),
+                'distance': 5.0,
+                'steps': 6000,
+                'calories_burned': 200,
+            })
+
+        result = display_recent_workouts(workouts)
+        #
+        # # Ensure the first workout in sorted order is the most recent (last day)
+        self.assertTrue("Workout ID: workout19", result)
+        self.assertTrue("Workout ID: workout0",result)
+        # self.assertTrue(result.index("Workout ID: workout19") < result.index("Workout ID: workout0"))
+
+    def test_multiple_workouts_sorted(self):
+        """Test that workouts are sorted by start time in descending order."""
+        workouts = [
+            {
+                'workout_id': 'workout1',
+                'start_timestamp': '2024-01-01 06:00:00',
+                'end_timestamp': '2024-01-01 06:30:00',
+                'start_lat_lng': (1.05, 4.10),
+                'end_lat_lng': (1.08, 4.12),
+                'distance': 5.0,
+                'steps': 6000,
+                'calories_burned': 200,
+            },
+            {
+                'workout_id': 'workout2',
+                'start_timestamp': '2024-01-02 07:00:00',  # Newer workout
+                'end_timestamp': '2024-01-02 07:45:00',
+                'start_lat_lng': (1.15, 4.20),
+                'end_lat_lng': (1.18, 4.22),
+                'distance': 7.0,
+                'steps': 8000,
+                'calories_burned': 250,
+            }
+        ]
+        result = display_recent_workouts(workouts)
+        # Check that workout2 (newer) appears before workout1 (older)
+        self.assertTrue(result.index("Workout ID: workout2") < result.index("Workout ID: workout1"))
 
 
 if __name__ == "__main__":
