@@ -172,6 +172,6 @@ def display_genai_advice(timestamp, content, image):
     content = genai_advice['content']
     st.title(f" :red[{content}]")
 
-    #get image and display it 
+    #get image and display it  
     image = genai_advice['image']
     st.image(image)
