@@ -7,6 +7,8 @@
 - Ariana Phillips
 - Kei Sanabria
 
+Deployed App Link: https://byte-me-44ac355vjq-uc.a.run.app/
+
 # How to Run the Streamlit App
 
 ### Running the Streamlit app locally
