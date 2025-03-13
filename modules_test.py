@@ -73,23 +73,27 @@ class TestDisplayActivitySummary(unittest.TestCase):
         except Exception as e:
             self.fail(f"Function raised an exception {e} unexpectedly!")
 
-    def test_table_renders(self):
-        """Test that the summary table is rendered, uses placeholders for the Streamlit environment"""
+    @patch('streamlit.dataframe')
+    @patch('streamlit.pyplot')
+    def test_table_renders(self, mock_pyplot, mock_dataframe):
+        """Test that the summary table is rendered using placeholders for the Streamlit environment"""
         sample_workouts = [
             {"start_timestamp": "2025-03-01 08:00", "end_timestamp": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories_burned": 400},
             {"start_timestamp": "2025-03-02 08:30", "end_timestamp": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories_burned": 550},
         ]
-        table_output = display_activity_summary(sample_workouts)  
-        self.assertIsNotNone(table_output, "Summary table should be rendered.")
+        display_activity_summary(sample_workouts)  
+        mock_dataframe.assert_called_once()  # Ensure dataframe is called
 
-    def test_graph_renders(self):
-        """Test that the graph is rendered, uses placeholders for the Streamlit environment"""
+    @patch('streamlit.dataframe')
+    @patch('streamlit.pyplot')
+    def test_graph_renders(self, mock_pyplot, mock_dataframe):
+        """Test that the graph is rendered using placeholders for the Streamlit environment"""
         sample_workouts = [
             {"start_timestamp": "2025-03-01 08:00", "end_timestamp": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories_burned": 400},
             {"start_timestamp": "2025-03-02 08:30", "end_timestamp": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories_burned": 550},
         ]
-        graph_output = display_activity_summary(sample_workouts)  # Assuming this returns a graph
-        self.assertIsNotNone(graph_output, "Graph should be rendered.")
+        display_activity_summary(sample_workouts)
+        mock_pyplot.assert_called_once()  # Ensure plot is called
 
 
 class TestDisplayGenAiAdvice(unittest.TestCase):
