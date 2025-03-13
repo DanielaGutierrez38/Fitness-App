@@ -68,10 +68,10 @@ class TestDisplayActivitySummary(unittest.TestCase):
         {"start_timestamp": "2025-03-01 08:00", "end_timestamp": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories_burned": 400},
         {"start_timestamp": "2025-03-02 08:30", "end_timestamp": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories_burned": 550},
         ]
-    try:
-        display_activity_summary(sample_workouts)
-    except Exception as e:
-        self.fail(f"Function raised an exception {e} unexpectedly!")
+        try:
+            display_activity_summary(sample_workouts)
+        except Exception as e:
+            self.fail(f"Function raised an exception {e} unexpectedly!")
 
     def test_table_renders(self):
         """Test that the summary table is rendered, uses placeholders for the Streamlit environment"""
