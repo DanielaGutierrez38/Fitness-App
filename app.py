@@ -39,7 +39,12 @@ def display_app_page():
 
         display_post(post["username"], post["user_image"], post["timestamp"], post["content"], post["post_image"])
 
-        
+
+    #call get genAI advice
+    advice = get_genai_advice(userId)
+    #call method in modules that displays the genAI advice
+    display_genai_advice(advice['timestamp'], advice['content'], advice['image'])
+
 
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':

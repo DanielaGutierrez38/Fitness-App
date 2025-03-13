@@ -7,12 +7,14 @@
 # function other than the example.
 #############################################################################
 
+import streamlit as st
 from internals import create_component
 import streamlit as st
 
 # Import for display_post
 import requests
 import base64
+from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts
 
 # This one has been written for you as an example. You may change it as wanted.
 def display_my_custom_component(value):
@@ -155,10 +157,21 @@ def display_activity_summary(workouts_list):
 
 
 def display_recent_workouts(workouts_list):
-    """Write a good docstring here."""
     pass
 
 
 def display_genai_advice(timestamp, content, image):
-    """Write a good docstring here."""
-    pass
+
+    genai_advice = get_genai_advice('user1') #get data from data_fetcher
+
+    #get timestamp and display it 
+    timestamp = genai_advice['timestamp']
+    st.subheader(f" :blue[{timestamp}]", divider="green")
+
+    #get motivational message and display it
+    content = genai_advice['content']
+    st.title(f" :red[{content}]")
+
+    #get image and display it 
+    image = genai_advice['image']
+    st.image(image)
