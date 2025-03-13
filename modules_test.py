@@ -11,15 +11,53 @@ from unittest.mock import patch
 from streamlit.testing.v1 import AppTest
 from modules import display_post, display_activity_summary, display_genai_advice, display_recent_workouts
 
+# Import for display_post
+from unittest.mock import patch, MagicMock
+import requests
+
 # Write your tests below
 
 class TestDisplayPost(unittest.TestCase):
     """Tests the display_post function."""
 
-    def test_foo(self):
-        """Tests foo."""
-        pass
+    @patch("modules.requests.get")
+    def test_create_valid_post(self, mock_get):
+        # Mock a successful image request
+        mock_get.return_value.status_code = 200
+        mock_get.return_value.headers = {'Content-Type': 'image/png'}
 
+        # Valid input data
+        username = "test_user"
+        user_image = "https://example.com/user.png"
+        timestamp = "2025-03-12 10:00:00"
+        content = "This is a test post."
+        post_image = "https://example.com/post.png"
+
+        # Call the function
+        display_post(username, user_image, timestamp, content, post_image)
+
+        # Assertions (mocked request should have been called)
+        mock_get.assert_called_with(post_image, stream=True, timeout=5)
+    
+    @patch('modules.requests.get')
+    @patch('modules.st.warning')
+    @patch('modules.st.session_state', new_callable=lambda: type('SessionStateMock', (object,), {})())
+    @patch('modules.st.markdown')
+    def test_display_post_invalid_image(self, mock_markdown, mock_session_state, mock_warning, mock_requests_get):
+        """Test display_post with an invalid image URL."""
+        mock_requests_get.side_effect = requests.RequestException("Error")
+
+        display_post("TestUser", "invalid_url", "2025-03-12", "Test content", "invalid_url")
+
+        mock_warning.assert_called_with("Invalid image URL. Please upload a valid image.")
+        self.assertEqual(mock_session_state.post_image, "https://via.placeholder.com/600x400?text=No+Image")
+        mock_markdown.assert_called()
+    
+    @patch('modules.st.markdown')
+    def test_display_post_handles_none_values(self, mock_markdown):
+        """Test display_post with None values."""
+        display_post(None, None, None, None, None)
+        mock_markdown.assert_called()
 
 class TestDisplayActivitySummary(unittest.TestCase):
     """Tests the display_activity_summary function."""
