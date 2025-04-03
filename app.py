@@ -27,16 +27,10 @@ def display_app_page():
         value = st.text_input('Enter your name')
         display_my_custom_component(value)
 
-        # Sample data
-        post = {
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "post_image": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg",
-            "username": "John Doe",
-            "content": "This is a sample post content. Streamlit makes it easy to create beautiful apps.",
-            "user_image": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg"
-        }
-
-        display_post(post["username"], post["user_image"], post["timestamp"], post["content"], post["post_image"])
+        # Get data
+        posts = get_user_posts(userId)  # Fetch a list of posts
+        for post in posts: # Show every post
+            display_post(post["Username"], post["UserImageUrl"], post["Timestamp"], post["Content"], post["PostImageUrl"])
         
     with tab2:
         advice = get_genai_advice(userId)
