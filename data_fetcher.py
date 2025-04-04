@@ -122,7 +122,7 @@ def get_user_posts(user_id):
 
     Returns:
         list: A list of dictionaries, each representing a post with keys:
-              'user_id', 'post_id', 'timestamp', 'content', 'image', 'username', and 'user_image'.
+            'user_id', 'post_id', 'timestamp', 'content', 'image', 'username', and 'user_image'.
     """
     # Initialize a BigQuery client
     client = bigquery.Client()
@@ -130,20 +130,21 @@ def get_user_posts(user_id):
     # Query to fetch posts for the given user_id and join with Users table
     query = f"""
         SELECT p.PostId, p.AuthorId, p.Timestamp, p.Content, p.ImageUrl as PostImageUrl,
-               u.Username, u.ImageUrl as UserImageUrl
+            u.Username, u.ImageUrl as UserImageUrl
         FROM `keishlyanysanabriatechx25.bytemeproject.Posts` p
         JOIN `keishlyanysanabriatechx25.bytemeproject.Users` u
         ON p.AuthorId = u.UserId
-        WHERE p.AuthorId = @user_id
+        WHERE p.AuthorId = '{user_id}'
     """
     
     # Set up query parameters
-    job_config = bigquery.QueryJobConfig(
-        query_parameters=[bigquery.ScalarQueryParameter("user_id", "STRING", user_id)]
-    )
+    # job_config = bigquery.QueryJobConfig(
+    #     query_parameters=[bigquery.ScalarQueryParameter("user_id", "STRING", user_id)]
+    # )
     
     # Execute the query
-    results = client.query(query, job_config=job_config)
+    results = client.query(query)
+    print(results)
 
     # Process the results and return the list of posts
     posts = []
@@ -160,7 +161,6 @@ def get_user_posts(user_id):
         posts.append(post)
     
     return posts
-
 
 def get_genai_advice(user_id):
     """Returns the most recent advice from the genai model.
