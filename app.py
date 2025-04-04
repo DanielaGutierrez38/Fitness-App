@@ -12,8 +12,6 @@ from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get
 # New imports
 from datetime import datetime
 
-userId = 'user1'
-
 # Created tabs and display post code by Copilot using the following prompt: "create a streamlit app that showcases a post. that post will have a timestamp, post_image, username, content (of the post), and user_image."
 def display_app_page():
     """Displays the home page of the app."""
@@ -28,9 +26,10 @@ def display_app_page():
         display_my_custom_component(value)
 
         # Get data
+        userId = 'user1'
         posts = get_user_posts(userId)  # Fetch a list of posts
         for post in posts: # Show every post
-            display_post(post["Username"], post["UserImageUrl"], post["Timestamp"], post["Content"], post["PostImageUrl"])
+            display_post(post["username"], post["user_image"], post["timestamp"], post["content"], post["image"])
         
     with tab2:
         advice = get_genai_advice(userId)
