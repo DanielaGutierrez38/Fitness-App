@@ -26,7 +26,7 @@ def display_app_page():
         display_my_custom_component(value)
 
         # Get data
-        userId = 'user1'
+        userId = 'user3'
         posts = get_user_posts(userId)  # Fetch a list of posts
         for post in posts: # Show every post
             display_post(post["username"], post["user_image"], post["timestamp"], post["content"], post["image"])
