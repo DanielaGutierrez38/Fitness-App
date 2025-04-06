@@ -36,8 +36,8 @@ def display_my_custom_component(value):
     html_file_name = "my_custom_component"
     create_component(data, html_file_name)
 
-# Function partially created by Copilot with "implement display_post to look like the image: (insert Mockup of display_post)"
-def display_post(username, user_image, timestamp, content, post_image):
+# Function partially created by Copilot and Claude with "implement display_post to look like the image: (insert Mockup of display_post)"
+def display_post(username, user_image, timestamp, content, post_image=None):
     """Displays a post with the given details.
 
     Args:
@@ -45,7 +45,8 @@ def display_post(username, user_image, timestamp, content, post_image):
         user_image (str): The URL or path to the user's profile image.
         timestamp (str): The time when the post was made.
         content (str): The content of the post.
-        post_image (str): The URL or path to the image associated with the post.
+        post_image (str, optional): The URL or path to the image associated with the post.
+                                   If None or invalid, no image will be displayed.
     """
     post = {
         "timestamp": timestamp,
@@ -68,36 +69,20 @@ def display_post(username, user_image, timestamp, content, post_image):
             print(f"Request exception: {e}") #added print statement
             return False
 
-    # Check if the post_image URL is valid
+    # Check if post_image is provided and valid
     if post['post_image'] and not is_valid_image(post['post_image']):
-        st.warning("Invalid image URL. Please upload a valid image.")
-
-        # Handle the file upload
-        uploaded_file = st.file_uploader("Upload an image:", type=["jpg", "jpeg", "png", "gif"])
-
-        if uploaded_file:
-            # Read the uploaded file as a binary stream and convert to base64
-            encoded_image = base64.b64encode(uploaded_file.getvalue()).decode("utf-8")
-            # Save the image to session state
-            st.session_state.post_image = f"data:image/jpeg;base64,{encoded_image}"
-            post['post_image'] = st.session_state.post_image
-
-        else:
-            # Use placeholder if no valid image is provided
-            st.session_state.post_image = "https://via.placeholder.com/600x400?text=No+Image"
-            post['post_image'] = st.session_state.post_image
-    elif not post['post_image']:
-        st.session_state.post_image = "https://via.placeholder.com/600x400?text=No+Image"
-        post['post_image'] = st.session_state.post_image
+        # If invalid, just set to None and inform the user
+        st.warning("Invalid image URL. Your post will be created without an image.")
+        post['post_image'] = None
 
     # Custom CSS and HTML rendering
     st.markdown(
         """
         <style>
         .post-container {
-            border-radius: 10px; /* Rounded corners here! */
-            overflow: hidden; /* Ensure child elements respect the border radius */
-            border: 1px solid #ddd; /* Optional: Add a border for better visibility */
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #ddd;
         }
         .user-box {
             background-color: #4285F4;
@@ -133,8 +118,9 @@ def display_post(username, user_image, timestamp, content, post_image):
     content_display = post['content'] if post['content'] else ""
     timestamp_display = post['timestamp'] if post['timestamp'] else ""
 
-    st.markdown(
-        f"""
+    # Create HTML content based on whether post_image is available or not
+    if post['post_image']:
+        html_content = f"""
         <div class="post-container">
             <div class="user-box">
                 <div class="user-row">
@@ -148,10 +134,25 @@ def display_post(username, user_image, timestamp, content, post_image):
                 <p>Posted on: {timestamp_display}</p>
             </div>
         </div>
-        """,
-        unsafe_allow_html=True
-    )
-
+        """
+    else:
+        # No image version - skip the image tag entirely
+        html_content = f"""
+        <div class="post-container">
+            <div class="user-box">
+                <div class="user-row">
+                    <img src="{user_image_display}">
+                    <h3>{username_display}</h3>
+                </div>
+                <p>{content_display}</p>
+            </div>
+            <div class="timestamp-row">
+                <p>Posted on: {timestamp_display}</p>
+            </div>
+        </div>
+        """
+    
+    st.markdown(html_content, unsafe_allow_html=True)
 
 def display_activity_summary(workouts_list):
     # Convert the workouts data into a DataFrame for easy display
