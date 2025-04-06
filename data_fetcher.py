@@ -144,7 +144,6 @@ def get_user_posts(user_id):
     
     # Execute the query
     results = client.query(query)
-    print(results)
 
     # Process the results and return the list of posts
     posts = []
