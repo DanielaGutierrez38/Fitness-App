@@ -150,7 +150,7 @@ def display_post(username, user_image, timestamp, content, post_image=None):
                 <p>Posted on: {timestamp_display}</p>
             </div>
         </div>
-        """
+        
     
     st.markdown(html_content, unsafe_allow_html=True)
 
