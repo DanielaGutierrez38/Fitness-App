@@ -462,7 +462,7 @@ class TestDataFetcher(unittest.TestCase):
         # Mocking the result of the query
         mock_query_job.result.return_value = [
             MagicMock(
-                workout_id="workout1", 
+                WorkoutId="workout1", 
                 start_timestamp="2024-07-29 07:00:00", 
                 end_timestamp="2024-07-29 08:00:00", 
                 start_lat_lng={"StartLocationLat": 37.7749, "StartLocationLong": -122.4194},
@@ -474,7 +474,7 @@ class TestDataFetcher(unittest.TestCase):
         ]
         
         expected_result = [{
-            'workout_id': "workout1",
+            'WorkoutID': "workout1",
             'start_timestamp': "2024-07-29 07:00:00",
             'end_timestamp': "2024-07-29 08:00:00",
             'start_lat_lng': (37.7749, -122.4194),
@@ -503,7 +503,7 @@ class TestDataFetcher(unittest.TestCase):
         
         mock_query_job.result.return_value = [
             MagicMock(
-                workout_id="workout1", 
+                WorkoutId="workout1", 
                 start_timestamp="2024-07-29 07:00:00", 
                 end_timestamp="2024-07-29 08:00:00", 
                 start_lat_lng={"StartLocationLat": 37.7749, "StartLocationLong": -122.4194},
@@ -513,7 +513,7 @@ class TestDataFetcher(unittest.TestCase):
                 calories_burned=400
             ),
             MagicMock(
-                workout_id="workout2", 
+                WorkoutId="workout2", 
                 start_timestamp="2024-07-30 09:00:00", 
                 end_timestamp="2024-07-30 10:00:00", 
                 start_lat_lng={"StartLocationLat": 40.7128, "StartLocationLong": -74.0060},
