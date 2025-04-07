@@ -242,7 +242,8 @@ class TestDisplayGenAiAdvice(unittest.TestCase):
 
 class TestGetUserWorkouts(unittest.TestCase):
 
-   def mock_row(self, **kwargs):
+
+    def mock_row(self, **kwargs):
         row = MagicMock()
         for key, value in kwargs.items():
             if key in ['StartTimestamp', 'EndTimestamp'] and value:
