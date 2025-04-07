@@ -448,7 +448,7 @@ class TestGetUserPosts(unittest.TestCase):
 
 import unittest
 from unittest.mock import MagicMock, patch
-from module import get_user_workouts  # Adjust to the correct import path
+from modules import get_user_workouts  # Adjust to the correct import path
 from google.cloud import bigquery
 import datetime
 
