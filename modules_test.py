@@ -253,6 +253,7 @@ class TestGetUserWorkouts(unittest.TestCase):
                 setattr(row, key, value)
         return row
 
+
     def test_get_user_workouts_valid_user(self):
         mock_client = MagicMock()
         mock_query_job = mock_client.query.return_value
@@ -283,7 +284,7 @@ class TestGetUserWorkouts(unittest.TestCase):
             'calories_burned': 400,
         }]
 
-        result = get_user_workouts("user1")
+        result = get_user_workouts("user1", client=mock_client)
         self.assertEqual(result, expected_result)
 
     def test_get_user_workouts_multiple_workouts(self):
@@ -317,7 +318,7 @@ class TestGetUserWorkouts(unittest.TestCase):
             )
         ]
 
-        result = get_user_workouts("user1")
+        result = get_user_workouts("user1", client=mock_client)
         self.assertEqual(len(result), 2)
 
 
