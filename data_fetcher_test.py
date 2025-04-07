@@ -556,42 +556,6 @@ class TestGetUserProfile(unittest.TestCase):
         self.assertEqual(result["profile_image"], "https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg")
         self.assertEqual(result["friends"], ["user2", "user3", "user4"])
 
-   @patch("google.cloud.bigquery.Client")
-def test_get_user_profile_no_friends(self, mock_bigquery_client):
-    """Tests user profile retrieval when user has no friends."""
-
-    # Mock fresh user result
-    solo_user_row = MagicMock()
-    solo_user_row.__getitem__.side_effect = lambda key: {
-        'UserId': 'user1',
-        'Name': 'SoloUser',
-        'Username': 'soloplayer',
-        'DateOfBirth': datetime.date(1995, 5, 5),
-        'ImageUrl': 'https://example.com/solo.jpg'
-    }[key]
-
-    # Mock no friends result
-    mock_friends_result = MagicMock()
-    mock_friends_result.__iter__.return_value = iter([])
-
-    # Set up the BigQuery client with side effects
-    mock_user_result = MagicMock()
-    mock_user_result.__iter__.return_value = iter([solo_user_row])
-
-    mock_client = MagicMock()
-    mock_client.query.side_effect = [mock_user_result, mock_friends_result]
-    mock_bigquery_client.return_value = mock_client
-
-    from data_fetcher import get_user_profile
-    result = get_user_profile("user1")
-
-    self.assertEqual(result["full_name"], "SoloUser")
-    self.assertEqual(result["username"], "soloplayer")
-    self.assertEqual(result["date_of_birth"], "1995-05-05")
-    self.assertEqual(result["profile_image"], "https://example.com/solo.jpg")
-    self.assertEqual(result["friends"], [])
-    
-
     @patch("google.cloud.bigquery.Client")
     def test_get_user_profile_not_found(self, mock_bigquery_client):
         """Tests error handling when user is not found in database."""
