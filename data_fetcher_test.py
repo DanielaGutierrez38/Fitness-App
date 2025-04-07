@@ -525,7 +525,6 @@ class TestGetUserProfile(unittest.TestCase):
     def test_get_user_profile_success(self, mock_bigquery_client):
         """Tests successful retrieval of user profile data with friends."""
 
-        # Mock user data
         mock_user_result = MagicMock()
         mock_user_result.__iter__.return_value = iter([
             {
@@ -537,7 +536,6 @@ class TestGetUserProfile(unittest.TestCase):
             }
         ])
 
-        # Mock friends data
         mock_friends_result = MagicMock()
         mock_friends_result.__iter__.return_value = iter([
             {'FriendId': 'user2'},
@@ -583,6 +581,10 @@ class TestGetUserProfile(unittest.TestCase):
         from data_fetcher import get_user_profile
         result = get_user_profile("user1")
 
+        self.assertEqual(result["full_name"], "SoloUser")
+        self.assertEqual(result["username"], "soloplayer")
+        self.assertEqual(result["date_of_birth"], "1995-05-05")
+        self.assertEqual(result["profile_image"], "https://example.com/solo.jpg")
         self.assertEqual(result["friends"], [])
 
     @patch("google.cloud.bigquery.Client")
