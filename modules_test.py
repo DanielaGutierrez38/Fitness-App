@@ -239,7 +239,6 @@ class TestDisplayGenAiAdvice(unittest.TestCase):
         mock_title.assert_called_once_with(" :red[Motivational message]")
 
 
-e
 
 class TestGetUserWorkouts(unittest.TestCase):
 
@@ -330,9 +329,6 @@ class TestGetUserWorkouts(unittest.TestCase):
 
         result = get_user_workouts("user2", client=mock_client)
         self.assertEqual(result, expected)
-
-if __name__ == '__main__':
-    unittest.main()
 
 
 if __name__ == "__main__":
