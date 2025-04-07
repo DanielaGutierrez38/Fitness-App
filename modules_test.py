@@ -272,7 +272,7 @@ class TestGetUserWorkouts(unittest.TestCase):
             'steps': 0,
             'calories_burned': 0,
         }]
-        result = modules.display_recent_workouts(workout_list)
+        result = display_recent_workouts(workout_list)
         # Add assertions based on how your function behaves with null coords.
         # For simplicity, I'll just check if it doesn't crash. You might need more specific assertions.
 
@@ -296,7 +296,7 @@ class TestGetUserWorkouts(unittest.TestCase):
             )
         ]
 
-        result = modules.display_recent_workouts([
+        result = display_recent_workouts([
             {
                 'WorkoutId': "workout1",
                 'StartTimestamp': "2024-07-29T07:00:00",
@@ -342,7 +342,7 @@ class TestGetUserWorkouts(unittest.TestCase):
             )
         ]
 
-        result = modules.display_recent_workouts([
+        result = display_recent_workouts([
             {
                 'WorkoutId': "workout1",
                 'StartTimestamp': "2024-07-29T07:00:00",
