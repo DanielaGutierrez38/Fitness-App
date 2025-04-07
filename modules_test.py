@@ -249,7 +249,7 @@ class TestGetUserWorkouts(unittest.TestCase):
         for key, value in kwargs.items():
             if key in ['StartTimestamp', 'EndTimestamp'] and value:
                 mock_time = MagicMock()
-                mock_time.isoformat.return_value = value.isoformat()
+                mock_time.format.return_value = value.format()
                 setattr(row, key, mock_time)
             else:
                 setattr(row, key, value)
