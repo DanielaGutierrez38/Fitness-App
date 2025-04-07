@@ -18,7 +18,7 @@ def display_app_page():
     """Displays the home page of the app."""
     st.title('Welcome to SDS!')
 
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Home", "GenAI Advice", "Activity Summary", "Recent Workouts", "Sensor Data"])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Home", "GenAI Advice", "Activity Summary", "Recent Workouts", "Sensor Data", "Community"])
     userId = None # Example data
 
     with tab1:
