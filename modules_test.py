@@ -257,7 +257,7 @@ class TestGetUserWorkouts(unittest.TestCase):
 
     @patch('streamlit.write')
     def test_display_recent_workouts_no_workouts(self, mock_st_write):
-        result = modules.display_recent_workouts([])  # Pass an empty list
+        result = display_recent_workouts([])  # Pass an empty list
         mock_st_write.assert_called_with("No recent workouts. Let's get started!")
 
     @patch('streamlit.write')
