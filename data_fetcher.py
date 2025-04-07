@@ -19,6 +19,9 @@ import pytz
 
 _vertexai_initialized = False
 
+# Import for get_user_posts
+from google.cloud import bigquery
+
 users = {
     'user1': {
         'full_name': 'Remi',
@@ -149,24 +152,58 @@ def get_user_profile(user_id):
         raise ValueError(f'User {user_id} not found.')
     return users[user_id]
 
-
+'''
+Funcion partially created by ChatGPT and Claude: "fix the following Function: get_user_posts in data_fetcher.py 
+Returns a list of a user's posts. Some data in a post may not be populated.
+Input: user_id
+Output: A list of posts. Each post is a dictionary with keys user_id, post_id, timestamp, content, and image." 
+'''
 def get_user_posts(user_id):
-    """Returns a list of a user's posts.
+    """Returns a list of a user's posts from the BigQuery database.
 
-    This function currently returns random data. You will re-write it in Unit 3.
+    Args:
+        user_id (str): The ID of the user whose posts are being fetched.
+
+    Returns:
+        list: A list of dictionaries, each representing a post with keys:
+            'user_id', 'post_id', 'timestamp', 'content', 'image', 'username', and 'user_image'.
     """
-    content = random.choice([
-        'Had a great workout today!',
-        'The AI really motivated me to push myself further, I ran 10 miles!',
-    ])
-    return [{
-        'user_id': user_id,
-        'post_id': 'post1',
-        'timestamp': '2024-01-01 00:00:00',
-        'content': content,
-        'image': 'image_url',
-    }]
+    # Initialize a BigQuery client
+    client = bigquery.Client()
 
+    # Query to fetch posts for the given user_id and join with Users table
+    query = f"""
+        SELECT p.PostId, p.AuthorId, p.Timestamp, p.Content, p.ImageUrl as PostImageUrl,
+            u.Username, u.ImageUrl as UserImageUrl
+        FROM `keishlyanysanabriatechx25.bytemeproject.Posts` p
+        JOIN `keishlyanysanabriatechx25.bytemeproject.Users` u
+        ON p.AuthorId = u.UserId
+        WHERE p.AuthorId = '{user_id}'
+    """
+    
+    # Set up query parameters
+    # job_config = bigquery.QueryJobConfig(
+    #     query_parameters=[bigquery.ScalarQueryParameter("user_id", "STRING", user_id)]
+    # )
+    
+    # Execute the query
+    results = client.query(query)
+
+    # Process the results and return the list of posts
+    posts = []
+    for row in results:
+        post = {
+            'user_id': row['AuthorId'],
+            'post_id': row['PostId'],
+            'timestamp': row['Timestamp'].strftime('%Y-%m-%d %H:%M:%S'),
+            'content': row['Content'] if row['Content'] else '',  # Handle empty content
+            'image': row['PostImageUrl'] if row['PostImageUrl'] else '',  # Handle missing post image
+            'username': row['Username'],  # Add username from Users table
+            'user_image': row['UserImageUrl']  # Add user's profile image from Users table
+        }
+        posts.append(post)
+    
+    return posts
 
 def get_genai_advice(user_id):
 
