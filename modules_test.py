@@ -238,84 +238,99 @@ class TestDisplayGenAiAdvice(unittest.TestCase):
         mock_subheader.assert_called_once_with(" :blue[No timestamp available]", divider="green")
         mock_title.assert_called_once_with(" :red[Motivational message]")
 
-'''class TestDisplayRecentWorkouts(unittest.TestCase):
-    def test_empty_workouts_list(self):
-        """Test when the workouts list is empty"""
-        result = display_recent_workouts([])
-        self.assertIsNone(result)  # Should return nothing
 
-    def test_single_workout_entry(self):
+
+
+class TestDisplayRecentWorkouts(unittest.TestCase):
+
+    @patch("data_fetcher.get_user_workouts")
+    def test_empty_workouts_list(self, mock_get_user_workouts):
+        """Test when the workouts list is empty"""
+        mock_get_user_workouts.return_value = []
+        workouts = mock_get_user_workouts.return_value
+        result = display_recent_workouts(workouts)
+        self.assertIsNone(result)
+
+    @patch("data_fetcher.get_user_workouts")
+    def test_single_workout_entry(self, mock_get_user_workouts):
         """Test when there is a single workout"""
-        workouts = [{
+        mock_get_user_workouts.return_value = [{
             'workout_id': 'workout1',
             'start_timestamp': '2024-03-10 08:00:00',
             'end_timestamp': '2024-03-10 08:30:00',
-            'start_lat_lng': 2.36,
-            'end_lat_lng': 1.5444,
+            'start_lat_lng': (2.36, 4.0),
+            'end_lat_lng': (1.5444, 4.1),
             'distance': 5.2,
             'steps': 6000,
             'calories_burned': 300
         }]
+        workouts = mock_get_user_workouts.return_value
         result = display_recent_workouts(workouts)
         self.assertIsNone(result)
 
-    def test_multiple_workouts_sorted(self):
+    @patch("data_fetcher.get_user_workouts")
+    def test_multiple_workouts_sorted(self, mock_get_user_workouts):
         """Test multiple workouts sorted by timestamp"""
-        workouts = [
+        mock_get_user_workouts.return_value = [
             {'workout_id': 'workout1', 'start_timestamp': '2024-03-10 08:00:00', 'end_timestamp': '2024-03-10 08:30:00',
-            'start_lat_lng': 2.0, 'end_lat_lng': 2.0, 'distance': 5.2, 'steps': 6000, 'calories_burned': 300},
-
+             'start_lat_lng': (2.0, 4.0), 'end_lat_lng': (2.0, 4.1), 'distance': 5.2, 'steps': 6000, 'calories_burned': 300},
             {'workout_id': 'workout2', 'start_timestamp': '2024-03-11 09:00:00', 'end_timestamp': '2024-03-11 09:45:00',
-            'start_lat_lng': 2.0, 'end_lat_lng': 2.0, 'distance': 3.0, 'steps': 4000, 'calories_burned': 250}
+             'start_lat_lng': (2.0, 4.0), 'end_lat_lng': (2.0, 4.1), 'distance': 3.0, 'steps': 4000, 'calories_burned': 250}
         ]
-
+        workouts = mock_get_user_workouts.return_value
         display_recent_workouts(workouts)
         self.assertEqual(workouts[0]['workout_id'], 'workout2')  # Most recent should be first
         self.assertEqual(workouts[1]['workout_id'], 'workout1')  # Older should be second
 
-    def test_workouts_with_same_start_time(self):
+    @patch("data_fetcher.get_user_workouts")
+    def test_workouts_with_same_start_time(self, mock_get_user_workouts):
         """Test multiple workouts with the same timestamp"""
-        workouts = [
+        mock_get_user_workouts.return_value = [
             {'workout_id': 'workout1', 'start_timestamp': '2024-03-11 09:00:00', 'end_timestamp': '2024-03-11 09:45:00',
-            'start_lat_lng': 2.0, 'end_lat_lng': 2.0, 'distance': 3.0, 'steps': 4000, 'calories_burned': 250},
-
+             'start_lat_lng': (2.0, 4.0), 'end_lat_lng': (2.0, 4.1), 'distance': 3.0, 'steps': 4000, 'calories_burned': 250},
             {'workout_id': 'workout2', 'start_timestamp': '2024-03-11 09:00:00', 'end_timestamp': '2024-03-11 09:45:00',
-            'start_lat_lng': 2.0, 'end_lat_lng': 2.0, 'distance': 4.0, 'steps': 5000, 'calories_burned': 300}
+             'start_lat_lng': (2.0, 4.0), 'end_lat_lng': (2.0, 4.1), 'distance': 4.0, 'steps': 5000, 'calories_burned': 300}
         ]
-
+        workouts = mock_get_user_workouts.return_value
         display_recent_workouts(workouts)
-        self.assertEqual(len(workouts), 2)  # Both workouts should be displayed
-        self.assertEqual(workouts[0]['workout_id'], 'workout1')  # Order should be unchanged
+        self.assertEqual(len(workouts), 2)
+        self.assertEqual(workouts[0]['workout_id'], 'workout1')
 
-    def test_workout_with_zero_and_negative_values(self):
+    @patch("data_fetcher.get_user_workouts")
+    def test_workout_with_zero_and_negative_values(self, mock_get_user_workouts):
         """Test workout with zero and negative values"""
-        workouts = [
+        mock_get_user_workouts.return_value = [
             {'workout_id': 'workout1', 'start_timestamp': '2024-03-10 07:00:00', 'end_timestamp': '2024-03-10 07:30:00',
-            'start_lat_lng': 2.0, 'end_lat_lng': 2.0, 'distance': 0, 'steps': 0, 'calories_burned': -100}
+             'start_lat_lng': (2.0, 4.0), 'end_lat_lng': (2.0, 4.0), 'distance': 0, 'steps': 0, 'calories_burned': -100}
         ]
-
+        workouts = mock_get_user_workouts.return_value
         display_recent_workouts(workouts)
         self.assertEqual(workouts[0]['distance'], 0)
         self.assertEqual(workouts[0]['steps'], 0)
         self.assertEqual(workouts[0]['calories_burned'], -100)
 
-    def test_large_number_of_workouts(self):
+    @patch("data_fetcher.get_user_workouts")
+    def test_large_number_of_workouts(self, mock_get_user_workouts):
         """Test function with a large number of workouts"""
         workouts = []
         for i in range(100):
             workouts.append({
                 'workout_id': f'workout{i}',
-                'start_timestamp': f'2024-03-{10 + i} 07:00:00',
-                'end_timestamp': f'2024-03-{10 + i} 07:30:00',
-                'start_lat_lng': 2.0,
-                'end_lat_lng': 2.0,
+                'start_timestamp': f'2024-03-{10 + i % 20:02} 07:00:00',
+                'end_timestamp': f'2024-03-{10 + i % 20:02} 07:30:00',
+                'start_lat_lng': (2.0, 4.0),
+                'end_lat_lng': (2.0, 4.1),
                 'distance': 5.0,
                 'steps': 6000,
                 'calories_burned': 300
             })
-
+        mock_get_user_workouts.return_value = workouts
+        workouts = mock_get_user_workouts.return_value
         display_recent_workouts(workouts)
-        self.assertEqual(len(workouts), 100)  # Ensure all workouts are processed'''
+        self.assertEqual(len(workouts), 100)
+
+if __name__ == '__main__':
+    unittest.main()
 
 if __name__ == "__main__":
     unittest.main()
