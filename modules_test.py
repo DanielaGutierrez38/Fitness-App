@@ -242,27 +242,26 @@ class TestDisplayGenAiAdvice(unittest.TestCase):
 
 class TestGetUserWorkouts(unittest.TestCase):
 
-    def mock_row(self, **kwargs):
+   def mock_row(self, **kwargs):
         row = MagicMock()
         for key, value in kwargs.items():
             if key in ['StartTimestamp', 'EndTimestamp'] and value:
                 mock_time = MagicMock()
-                mock_time.isoformat.return_value = value
+                mock_time.isoformat.return_value = value.isoformat()
                 setattr(row, key, mock_time)
             else:
                 setattr(row, key, value)
         return row
 
-    def test_display_recent_workouts_valid_user(self):
+    def test_get_user_workouts_valid_user(self):
         mock_client = MagicMock()
-        mock_query_job = MagicMock()
-        mock_client.query.return_value = mock_query_job
+        mock_query_job = mock_client.query.return_value
 
         mock_query_job.result.return_value = [
             self.mock_row(
-                WorkoutId='workout1',
-                StartTimestamp='2024-07-29T07:00:00',
-                EndTimestamp='2024-07-29T08:00:00',
+                WorkoutId="workout1",
+                StartTimestamp=datetime.datetime(2024, 7, 29, 7, 0, 0),
+                EndTimestamp=datetime.datetime(2024, 7, 29, 8, 0, 0),
                 StartLocationLat=37.7749,
                 StartLocationLong=-122.4194,
                 EndLocationLat=37.8049,
@@ -273,8 +272,8 @@ class TestGetUserWorkouts(unittest.TestCase):
             )
         ]
 
-        expected = [{
-            'WorkoutId': 'workout1',
+        expected_result = [{
+            'WorkoutId': "workout1",
             'StartTimestamp': '2024-07-29T07:00:00',
             'end_timestamp': '2024-07-29T08:00:00',
             'start_lat_lng': (37.7749, -122.4194),
@@ -284,8 +283,43 @@ class TestGetUserWorkouts(unittest.TestCase):
             'calories_burned': 400,
         }]
 
-        result = display_recent_workouts("user1", client=mock_client)
-        self.assertEqual(result, expected)
+        result = get_user_workouts("user1", client=mock_client)
+        self.assertEqual(result, expected_result)
+
+    def test_get_user_workouts_multiple_workouts(self):
+        mock_client = MagicMock()
+        mock_query_job = mock_client.query.return_value
+
+        mock_query_job.result.return_value = [
+            self.mock_row(
+                WorkoutId="workout1",
+                StartTimestamp=datetime.datetime(2024, 7, 29, 7, 0, 0),
+                EndTimestamp=datetime.datetime(2024, 7, 29, 8, 0, 0),
+                StartLocationLat=37.7749,
+                StartLocationLong=-122.4194,
+                EndLocationLat=37.8049,
+                EndLocationLong=-122.4210,
+                TotalDistance=5.0,
+                TotalSteps=8000,
+                CaloriesBurned=400
+            ),
+            self.mock_row(
+                WorkoutId="workout2",
+                StartTimestamp=datetime.datetime(2024, 7, 30, 9, 0, 0),
+                EndTimestamp=datetime.datetime(2024, 7, 30, 10, 0, 0),
+                StartLocationLat=40.7128,
+                StartLocationLong=-74.0060,
+                EndLocationLat=40.7308,
+                EndLocationLong=-73.9976,
+                TotalDistance=6.5,
+                TotalSteps=10000,
+                CaloriesBurned=500
+            )
+        ]
+
+        result = get_user_workouts("user1", client=mock_client)
+        self.assertEqual(len(result), 2)
+
 
     def test_display_recent_workouts_no_workouts(self):
         mock_client = MagicMock()
