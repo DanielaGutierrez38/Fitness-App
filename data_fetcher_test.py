@@ -463,7 +463,7 @@ class TestDataFetcher(unittest.TestCase):
         mock_query_job.result.return_value = [
             MagicMock(
                 WorkoutId="workout1", 
-                start_timestamp="2024-07-29 07:00:00", 
+                StartTimestamp="2024-07-29 07:00:00", 
                 end_timestamp="2024-07-29 08:00:00", 
                 start_lat_lng={"StartLocationLat": 37.7749, "StartLocationLong": -122.4194},
                 end_lat_lng={"EndLocationLat": 37.8049, "EndLocationLong": -122.4210},
@@ -475,7 +475,7 @@ class TestDataFetcher(unittest.TestCase):
         
         expected_result = [{
             'WorkoutID': "workout1",
-            'start_timestamp': "2024-07-29 07:00:00",
+            'StartTimestamp': "2024-07-29 07:00:00",
             'end_timestamp': "2024-07-29 08:00:00",
             'start_lat_lng': (37.7749, -122.4194),
             'end_lat_lng': (37.8049, -122.4210),
@@ -504,7 +504,7 @@ class TestDataFetcher(unittest.TestCase):
         mock_query_job.result.return_value = [
             MagicMock(
                 WorkoutId="workout1", 
-                start_timestamp="2024-07-29 07:00:00", 
+                StartTimestamp="2024-07-29 07:00:00", 
                 end_timestamp="2024-07-29 08:00:00", 
                 start_lat_lng={"StartLocationLat": 37.7749, "StartLocationLong": -122.4194},
                 end_lat_lng={"EndLocationLat": 37.8049, "EndLocationLong": -122.4210},
@@ -514,7 +514,7 @@ class TestDataFetcher(unittest.TestCase):
             ),
             MagicMock(
                 WorkoutId="workout2", 
-                start_timestamp="2024-07-30 09:00:00", 
+                StartTimestamp="2024-07-30 09:00:00", 
                 end_timestamp="2024-07-30 10:00:00", 
                 start_lat_lng={"StartLocationLat": 40.7128, "StartLocationLong": -74.0060},
                 end_lat_lng={"EndLocationLat": 40.7308, "EndLocationLong": -73.9976},
