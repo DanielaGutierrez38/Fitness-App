@@ -172,7 +172,12 @@ class TestDataFetcher(unittest.TestCase):
     def test_get_genai_advice_success(self, mock_get_user_workouts, mock_generative_model, mock_datetime_module, mock_randint, mock_choice, mock_os_environ_get, mock_vertexai_init):
         from data_fetcher import get_genai_advice
 
-        mock_os_environ_get.return_value = "test_project"
+        mock_os_environ_get.side_effect = lambda key, default=None: {
+        "PROJECT_ID": "test_project",  # Assuming this is for your project ID
+        "TIMEZONE": "America/New_York", # Replace "TIMEZONE" with the actual env var name
+        # Add other environment variables your function might use
+        }.get(key, default)
+
         mock_choice.return_value = 'https://test.image.com'
         mock_randint.return_value = 12345
 
@@ -206,7 +211,8 @@ class TestDataFetcher(unittest.TestCase):
     @patch('random.choice')
     @patch('data_fetcher.datetime')  # Patch the 'datetime' module in data_fetcher
     @patch('data_fetcher.GenerativeModel')
-    def test_get_genai_advice_none_image(self, mock_generative_model, mock_datetime_module, mock_choice, mock_vertexai_init):
+    @patch('google.cloud.bigquery.Client')
+    def test_get_genai_advice_none_image(self,mock_bigquery_client, mock_generative_model, mock_datetime_module, mock_choice, mock_vertexai_init):
         from data_fetcher import get_genai_advice
 
         mock_choice.return_value = None
@@ -220,6 +226,7 @@ class TestDataFetcher(unittest.TestCase):
 
         expected_message = "Keep going!"
         mock_generative_model.return_value = MockGenerativeModel(expected_message)
+        mock_bigquery_client.return_value = MagicMock()
 
         result = get_genai_advice("test_user")
         self.assertEqual(result['image'], None)
