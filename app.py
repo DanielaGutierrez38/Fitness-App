@@ -102,6 +102,115 @@ def display_app_page():
                 st.write(f'user {user_id} not found')
         display_community_page(userId)
 
+        #############################################################################
+# activity_page.py
+#
+# This file displays a user’s activity (3 recent workouts, summary, and share button).
+# Line written by ChatGPT (post generation logic & workout summary layout).
+#############################################################################
+
+import streamlit as st
+from google.cloud import bigquery
+from datetime import datetime
+import pytz
+import uuid
+
+def get_recent_workouts(user_id, limit=3):
+    client = bigquery.Client()
+    query = """
+        SELECT WorkoutId, StartTimestamp, EndTimestamp, TotalDistance, TotalSteps, CaloriesBurned
+        FROM `keishlyanysanabriatechx25.bytemeproject.Workouts`
+        WHERE UserId = @user_id
+        ORDER BY StartTimestamp DESC
+        LIMIT @limit
+    """
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("user_id", "STRING", user_id),
+            bigquery.ScalarQueryParameter("limit", "INT64", limit)
+        ]
+    )
+    results = client.query(query, job_config=job_config).result()
+    return [dict(row.items()) for row in results]
+
+def get_activity_summary(user_id):
+    client = bigquery.Client()
+    query = """
+        SELECT
+            SUM(TotalDistance) AS total_distance,
+            SUM(TotalSteps) AS total_steps,
+            SUM(CaloriesBurned) AS total_calories
+        FROM `keishlyanysanabriatechx25.bytemeproject.Workouts`
+        WHERE UserId = @user_id
+    """
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[bigquery.ScalarQueryParameter("user_id", "STRING", user_id)]
+    )
+    result = client.query(query, job_config=job_config).result()
+    row = next(iter(result), {})
+    return {
+        'total_distance': row.get('total_distance', 0),
+        'total_steps': row.get('total_steps', 0),
+        'total_calories': row.get('total_calories', 0)
+    }
+
+def share_stat_as_post(user_id, stat_type="steps", value=None):
+    if value is None:
+        raise ValueError("Stat value is required.")
+
+    client = bigquery.Client()
+
+    messages = {
+        "steps": f"Look at this, I walked {value} steps today!",
+        "distance": f"I crushed it — {value} miles logged today!",
+        "calories": f"Burned {value} calories! Progress feels good."
+    }
+
+    content = messages.get(stat_type, f"Today's achievement: {value} {stat_type}!")
+
+    post_id = str(uuid.uuid4())
+    timestamp = datetime.now(pytz.timezone("America/New_York")).strftime("%Y-%m-%d %H:%M:%S")
+
+    query = """
+        INSERT INTO `keishlyanysanabriatechx25.bytemeproject.Posts` (PostId, AuthorId, Timestamp, Content)
+        VALUES (@post_id, @user_id, @timestamp, @content)
+    """
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("post_id", "STRING", post_id),
+            bigquery.ScalarQueryParameter("user_id", "STRING", user_id),
+            bigquery.ScalarQueryParameter("timestamp", "STRING", timestamp),
+            bigquery.ScalarQueryParameter("content", "STRING", content),
+        ]
+    )
+
+    client.query(query, job_config=job_config).result()
+    return {"status": "success", "message": "Post shared!", "post_content": content}
+
+def display_activity_page(user_id):
+    st.subheader("Activity Summary")
+
+    summary = get_activity_summary(user_id)
+    st.metric("Total Steps", int(summary['total_steps']))
+    st.metric("Total Distance (mi)", round(summary['total_distance'], 2))
+    st.metric("Calories Burned", int(summary['total_calories']))
+
+    st.subheader("Recent Workouts")
+    workouts = get_recent_workouts(user_id)
+    for w in workouts:
+        st.write(f"Workout: {w['WorkoutId']}")
+        st.write(f"Start: {w['StartTimestamp']}, End: {w['EndTimestamp']}")
+        st.write(f"Distance: {w['TotalDistance']} mi, Steps: {w['TotalSteps']}, Calories: {w['CaloriesBurned']}")
+        st.markdown("---")
+
+    st.subheader("Share a Stat with the Community")
+    stat = st.selectbox("Choose a stat to share:", ["steps", "distance", "calories"])
+    if st.button("Share It!"):
+        value = summary.get(f"total_{stat}")
+        result = share_stat_as_post(user_id, stat, value)
+        st.success(result["message"])
+        st.write(f"📝 {result['post_content']}")
+
 
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':
