@@ -50,7 +50,7 @@ class TestDisplayPost(unittest.TestCase):
 
         display_post("TestUser", "invalid_url", "2025-03-12", "Test content", "invalid_url")
 
-        mock_warning.assert_called_with("Invalid image URL. Please upload a valid image.")
+        mock_warning.assert_called_with("Invalid image URL. Your post will be created without an image.")
         self.assertEqual(mock_session_state.post_image, "https://via.placeholder.com/600x400?text=No+Image")
         mock_markdown.assert_called()
     
