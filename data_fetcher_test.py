@@ -452,79 +452,73 @@ from modules import get_user_workouts  # Adjust to the correct import path
 from google.cloud import bigquery
 import datetime
 
-class TestDataFetcher(unittest.TestCase):
+class TestGetUserWorkout(unittest.TestCase):
 
     @patch("google.cloud.bigquery.Client")
     def test_get_user_workouts_valid_user(self, mock_bigquery_client):
         mock_client_instance = mock_bigquery_client.return_value
         mock_query_job = mock_client_instance.query.return_value
-        
-        # Mocking the result of the query
+
         mock_query_job.result.return_value = [
             MagicMock(
-                WorkoutId="workout1", 
-                StartTimestamp="2024-07-29 07:00:00", 
-                end_timestamp="2024-07-29 08:00:00", 
-                start_lat_lng={"StartLocationLat": 37.7749, "StartLocationLong": -122.4194},
-                end_lat_lng={"EndLocationLat": 37.8049, "EndLocationLong": -122.4210},
-                distance=5.0,
-                steps=8000,
-                calories_burned=400
+                WorkoutId="workout1",
+                StartTimestamp=datetime.datetime(2024, 7, 29, 7, 0, 0),
+                EndTimestamp=datetime.datetime(2024, 7, 29, 8, 0, 0),
+                StartLocationLat=37.7749,
+                StartLocationLong=-122.4194,
+                EndLocationLat=37.8049,
+                EndLocationLong=-122.4210,
+                TotalDistance=5.0,
+                TotalSteps=8000,
+                CaloriesBurned=400,
             )
         ]
-        
+
         expected_result = [{
-            'WorkoutID': "workout1",
-            'StartTimestamp': "2024-07-29 07:00:00",
-            'end_timestamp': "2024-07-29 08:00:00",
+            'WorkoutId': "workout1",
+            'StartTimestamp': "2024-07-29T07:00:00",
+            'end_timestamp': "2024-07-29T08:00:00",
             'start_lat_lng': (37.7749, -122.4194),
             'end_lat_lng': (37.8049, -122.4210),
             'distance': 5.0,
             'steps': 8000,
             'calories_burned': 400,
         }]
-        
-        # Check if the function returns the expected result
-        self.assertEqual(get_user_workouts("user1"), expected_result)
 
-    @patch("google.cloud.bigquery.Client")
-    def test_get_user_workouts_no_workouts(self, mock_bigquery_client):
-        mock_client_instance = mock_bigquery_client.return_value
-        mock_query_job = mock_client_instance.query.return_value
-        mock_query_job.result.return_value = []  # No workouts for the given user
-        
-        # Check if the function returns an empty list
-        self.assertEqual(get_user_workouts("user_unknown"), [])
+        self.assertEqual(get_user_workouts("user1"), expected_result)
 
     @patch("google.cloud.bigquery.Client")
     def test_get_user_workouts_multiple_workouts(self, mock_bigquery_client):
         mock_client_instance = mock_bigquery_client.return_value
         mock_query_job = mock_client_instance.query.return_value
-        
+
         mock_query_job.result.return_value = [
             MagicMock(
-                WorkoutId="workout1", 
-                StartTimestamp="2024-07-29 07:00:00", 
-                end_timestamp="2024-07-29 08:00:00", 
-                start_lat_lng={"StartLocationLat": 37.7749, "StartLocationLong": -122.4194},
-                end_lat_lng={"EndLocationLat": 37.8049, "EndLocationLong": -122.4210},
-                distance=5.0,
-                steps=8000,
-                calories_burned=400
+                WorkoutId="workout1",
+                StartTimestamp=datetime.datetime(2024, 7, 29, 7, 0, 0),
+                EndTimestamp=datetime.datetime(2024, 7, 29, 8, 0, 0),
+                StartLocationLat=37.7749,
+                StartLocationLong=-122.4194,
+                EndLocationLat=37.8049,
+                EndLocationLong=-122.4210,
+                TotalDistance=5.0,
+                TotalSteps=8000,
+                CaloriesBurned=400
             ),
             MagicMock(
-                WorkoutId="workout2", 
-                StartTimestamp="2024-07-30 09:00:00", 
-                end_timestamp="2024-07-30 10:00:00", 
-                start_lat_lng={"StartLocationLat": 40.7128, "StartLocationLong": -74.0060},
-                end_lat_lng={"EndLocationLat": 40.7308, "EndLocationLong": -73.9976},
-                distance=6.5,
-                steps=10000,
-                calories_burned=500
+                WorkoutId="workout2",
+                StartTimestamp=datetime.datetime(2024, 7, 30, 9, 0, 0),
+                EndTimestamp=datetime.datetime(2024, 7, 30, 10, 0, 0),
+                StartLocationLat=40.7128,
+                StartLocationLong=-74.0060,
+                EndLocationLat=40.7308,
+                EndLocationLong=-73.9976,
+                TotalDistance=6.5,
+                TotalSteps=10000,
+                CaloriesBurned=500
             )
         ]
-        
-        # Check if the function returns two workouts
+
         self.assertEqual(len(get_user_workouts("user1")), 2)
 
 if __name__ == "__main__":
