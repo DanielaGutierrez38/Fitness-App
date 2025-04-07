@@ -239,33 +239,45 @@ class TestDisplayGenAiAdvice(unittest.TestCase):
         mock_title.assert_called_once_with(" :red[Motivational message]")
 
 
+e
 
+class TestGetUserWorkouts(unittest.TestCase):
 
-class TestDataFetcher(unittest.TestCase):
+    def mock_row(self, **kwargs):
+        row = MagicMock()
+        for key, value in kwargs.items():
+            if key in ['StartTimestamp', 'EndTimestamp'] and value:
+                mock_time = MagicMock()
+                mock_time.isoformat.return_value = value
+                setattr(row, key, mock_time)
+            else:
+                setattr(row, key, value)
+        return row
 
     def test_get_user_workouts_valid_user(self):
         mock_client = MagicMock()
         mock_query_job = MagicMock()
         mock_client.query.return_value = mock_query_job
 
-        mock_row = MagicMock()
-        mock_row.workout_id = "workout1"
-        mock_row.start_timestamp = "2024-07-29 07:00:00"
-        mock_row.end_timestamp = "2024-07-29 08:00:00"
-        mock_row.StartLocationLat = 37.7749
-        mock_row.StartLocationLong = -122.4194
-        mock_row.EndLocationLat = 37.8049
-        mock_row.EndLocationLong = -122.4210
-        mock_row.distance = 5.0
-        mock_row.steps = 8000
-        mock_row.calories_burned = 400
+        mock_query_job.result.return_value = [
+            self.mock_row(
+                WorkoutId='workout1',
+                StartTimestamp='2024-07-29T07:00:00',
+                EndTimestamp='2024-07-29T08:00:00',
+                StartLocationLat=37.7749,
+                StartLocationLong=-122.4194,
+                EndLocationLat=37.8049,
+                EndLocationLong=-122.4210,
+                TotalDistance=5.0,
+                TotalSteps=8000,
+                CaloriesBurned=400
+            )
+        ]
 
-        mock_query_job.result.return_value = [mock_row]
-
-        expected_result = [{
-            'workout_id': "workout1",
-            'start_timestamp': "2024-07-29 07:00:00",
-            'end_timestamp': "2024-07-29 08:00:00",
+        expected = [{
+            'WorkoutId': 'workout1',
+            'StartTimestamp': '2024-07-29T07:00:00',
+            'end_timestamp': '2024-07-29T08:00:00',
             'start_lat_lng': (37.7749, -122.4194),
             'end_lat_lng': (37.8049, -122.4210),
             'distance': 5.0,
@@ -273,8 +285,8 @@ class TestDataFetcher(unittest.TestCase):
             'calories_burned': 400,
         }]
 
-        result = get_user_workouts(mock_client, "user1")
-        self.assertEqual(result, expected_result)
+        result = get_user_workouts("user1", client=mock_client)
+        self.assertEqual(result, expected)
 
     def test_get_user_workouts_no_workouts(self):
         mock_client = MagicMock()
@@ -282,44 +294,46 @@ class TestDataFetcher(unittest.TestCase):
         mock_query_job.result.return_value = []
         mock_client.query.return_value = mock_query_job
 
-        result = get_user_workouts(mock_client, "user_unknown")
+        result = get_user_workouts("user1", client=mock_client)
         self.assertEqual(result, [])
 
-    def test_get_user_workouts_multiple_workouts(self):
+    def test_get_user_workouts_null_coords(self):
         mock_client = MagicMock()
         mock_query_job = MagicMock()
         mock_client.query.return_value = mock_query_job
 
-        row1 = MagicMock()
-        row1.workout_id = "workout1"
-        row1.start_timestamp = "2024-07-29 07:00:00"
-        row1.end_timestamp = "2024-07-29 08:00:00"
-        row1.StartLocationLat = 37.7749
-        row1.StartLocationLong = -122.4194
-        row1.EndLocationLat = 37.8049
-        row1.EndLocationLong = -122.4210
-        row1.distance = 5.0
-        row1.steps = 8000
-        row1.calories_burned = 400
+        mock_query_job.result.return_value = [
+            self.mock_row(
+                WorkoutId='workout2',
+                StartTimestamp='2024-07-29T07:00:00',
+                EndTimestamp='2024-07-29T08:00:00',
+                StartLocationLat=None,
+                StartLocationLong=None,
+                EndLocationLat=None,
+                EndLocationLong=None,
+                TotalDistance=0.0,
+                TotalSteps=0,
+                CaloriesBurned=0
+            )
+        ]
 
-        row2 = MagicMock()
-        row2.workout_id = "workout2"
-        row2.start_timestamp = "2024-07-30 09:00:00"
-        row2.end_timestamp = "2024-07-30 10:00:00"
-        row2.StartLocationLat = 40.7128
-        row2.StartLocationLong = -74.0060
-        row2.EndLocationLat = 40.7308
-        row2.EndLocationLong = -73.9976
-        row2.distance = 6.5
-        row2.steps = 10000
-        row2.calories_burned = 500
+        expected = [{
+            'WorkoutId': 'workout2',
+            'StartTimestamp': '2024-07-29T07:00:00',
+            'end_timestamp': '2024-07-29T08:00:00',
+            'start_lat_lng': None,
+            'end_lat_lng': None,
+            'distance': 0.0,
+            'steps': 0,
+            'calories_burned': 0,
+        }]
 
-        mock_query_job.result.return_value = [row1, row2]
+        result = get_user_workouts("user2", client=mock_client)
+        self.assertEqual(result, expected)
 
-        result = get_user_workouts(mock_client, "user1")
-        self.assertEqual(len(result), 2)
-        self.assertEqual(result[0]['workout_id'], "workout1")
-        self.assertEqual(result[1]['workout_id'], "workout2")
+if __name__ == '__main__':
+    unittest.main()
+
 
 if __name__ == "__main__":
     unittest.main()
