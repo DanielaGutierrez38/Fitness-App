@@ -11,6 +11,7 @@ from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get
 
 # New imports
 from datetime import datetime
+from google.cloud import bigquery
 
 # Created tabs and display post code by Copilot using the following prompt: "create a streamlit app that showcases a post. that post will have a timestamp, post_image, username, content (of the post), and user_image."
 def display_app_page():
@@ -51,6 +52,56 @@ def display_app_page():
         userId = 'user1'
         sensor_data = get_user_sensor_data(userId, 'workout1')
         display_sensor_data(sensor_data)
+
+    with tab6:
+        client = bigquery.Client()
+        
+
+        def display_all_posts():
+            """
+            Displays all posts in the Streamlit app.
+            """
+            posts = get_user_posts(userId)
+            if posts:
+                for post in posts:
+                    st.write(f"\n Whats on your mind: {post['user_id']} - {post['timestamp']}: {post['content']}")
+                    image_url = post['image']
+                if image_url and image_url.startswith("http"):
+                    try:
+                        st.image(image_url, width=150)
+                    except Exception as e:
+                        st.error(f"Error displaying image from URL: {e}")
+                else:
+                    st.write("Image not available.")
+
+            else:
+                st.write("No posts available.")
+
+        def display_community_page(user_id):
+            """
+            Displays the community page for a given user.
+
+            Args:
+                user_id: The ID of the user.
+            """
+            genai_advice = get_genai_advice(user_id)
+            user_profile = get_user_profile(user_id)
+
+            if user_profile:
+                st.write(f"User Profile: {user_profile['full_name']} (@{user_profile['username']})")
+                st.image(user_profile['profile_image'], width=100)
+                st.write("News Feed:")
+                display_all_posts()
+                st.write("\nAdvice & Encouragement:")
+                if genai_advice:
+                    st.write(f"Advice: {genai_advice['content']}")
+                    st.image(genai_advice['image'], width=150)
+                else:
+                    st.write("No GenAI advice found.")
+            else:
+                st.write(f'user {user_id} not found')
+        display_community_page(userId)
+
 
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':
