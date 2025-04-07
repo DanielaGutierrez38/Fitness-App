@@ -283,7 +283,7 @@ class TestGetUserWorkouts(unittest.TestCase):
             'calories_burned': 400,
         }]
 
-        result = get_user_workouts("user1", client=mock_client)
+        result = get_user_workouts("user1")
         self.assertEqual(result, expected_result)
 
     def test_get_user_workouts_multiple_workouts(self):
@@ -317,7 +317,7 @@ class TestGetUserWorkouts(unittest.TestCase):
             )
         ]
 
-        result = get_user_workouts("user1", client=mock_client)
+        result = get_user_workouts("user1")
         self.assertEqual(len(result), 2)
 
 
@@ -327,7 +327,7 @@ class TestGetUserWorkouts(unittest.TestCase):
         mock_query_job.result.return_value = []
         mock_client.query.return_value = mock_query_job
 
-        result = display_recent_workouts("user1", client=mock_client)
+        result = display_recent_workouts("user1")
         self.assertEqual(result, [])
 
     def test_display_recent_workouts_null_coords(self):
@@ -361,7 +361,7 @@ class TestGetUserWorkouts(unittest.TestCase):
             'calories_burned': 0,
         }]
 
-        result = display_recent_workouts("user2", client=mock_client)
+        result = display_recent_workouts("user2")
         self.assertEqual(result, expected)
 
 
