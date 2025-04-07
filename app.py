@@ -6,7 +6,7 @@
 #############################################################################
 
 import streamlit as st
-from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts
+from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts, display_sensor_data
 from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts
 
 # New imports
@@ -19,7 +19,7 @@ def display_app_page():
     """Displays the home page of the app."""
     st.title('Welcome to SDS!')
 
-    tab1, tab2, tab3, tab4 = st.tabs(["Home", "GenAI Advice", "Activity Summary", "Recent Workouts"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Home", "GenAI Advice", "Activity Summary", "Recent Workouts", "Sensor Data"])
     userId = None # Example data
 
     with tab1:
@@ -45,12 +45,19 @@ def display_app_page():
     
     with tab3:
         # Fetch user workouts and display activity summary
+        userId = 'user1'
         workouts = get_user_workouts(userId)  # Fetch workouts for the user
         display_activity_summary(workouts)  # Pass workouts to display activity summary
 
     with tab4:
-        workouts = get_user_workouts('user1')
+        userId = 'user1'
+        workouts = get_user_workouts(userId)
         display_recent_workouts(workouts)
+
+    with tab5:
+        userId = 'user1'
+        sensor_data = get_user_sensor_data(userId, 'workout1')
+        display_sensor_data(sensor_data)
 
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':

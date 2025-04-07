@@ -164,14 +164,14 @@ def display_activity_summary(workouts_list):
     # Create a bar plot of the distance vs. calories burned
     #GEN AI citation: I asked AI for help to determine the correct values for the graph, ensuring values are displayed accurately
     fig, ax = plt.subplots()
-    ax.bar(df['start_timestamp'], df['distance'], color='blue', label='Distance (km)')
+    ax.bar(df['StartTimestamp'], df['distance'], color='blue', label='Distance (km)')
     ax.set_xlabel('Start Time')
     ax.set_ylabel('Distance (km)')
     ax.set_title('Distance vs. Time')
 
     # Add another bar plot for calories burned
     ax2 = ax.twinx()
-    ax2.plot(df['start_timestamp'], df['calories_burned'], color='red', label='Calories', marker='o')
+    ax2.plot(df['StartTimestamp'], df['calories_burned'], color='red', label='Calories', marker='o')
     ax2.set_ylabel('Calories')
     ax2.legend(loc='upper left')
 
@@ -185,7 +185,7 @@ def display_recent_workouts(workouts_list):
 
     #Gemini was used in this method to create the table using DataFrame
     # Sort workouts by start time (most recent first)
-    workouts_list.sort(key=lambda x: x['start_timestamp'], reverse=True)
+    workouts_list.sort(key=lambda x: x['StartTimestamp'], reverse=True)
 
     # Convert workouts_list into a DataFrame for easier display in table form
     df = pd.DataFrame(workouts_list)
@@ -223,3 +223,18 @@ def display_genai_advice(timestamp, content, image):
         st.image(image)
     else:
         st.title(f" :red[No image available]")
+
+def display_sensor_data(sensor_list):
+
+    st.title("User Sensor Data Viewer")
+
+    #if user_id and workout_id:
+    #sensor_data_df = get_user_sensor_data(user_id, workout_id)
+
+    if sensor_list is not None:
+        #st.subheader(f"Sensor Data for User: {user_id}, Workout: {workout_id}")
+        st.dataframe(sensor_list)  # Display as a nice interactive table
+    #elif sensor_list is not None and sensor_list.empty:
+        #st.info("No sensor data found for the specified User ID and Workout ID.")
+    else:
+        st.warning("Invalid User ID and Workout ID.")

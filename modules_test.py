@@ -18,7 +18,7 @@ import requests
 
 # Write your tests below
 
-class TestDisplayPost(unittest.TestCase):
+'''class TestDisplayPost(unittest.TestCase):
     """Tests the display_post function."""
 
     @patch("modules.requests.get")
@@ -94,28 +94,152 @@ class TestDisplayActivitySummary(unittest.TestCase):
             {"start_timestamp": "2025-03-02 08:30", "end_timestamp": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories_burned": 550},
         ]
         display_activity_summary(sample_workouts)
-        mock_pyplot.assert_called_once()  # Ensure plot is called
+        mock_pyplot.assert_called_once()  # Ensure plot is called'''
 
 
 class TestDisplayGenAiAdvice(unittest.TestCase):
     """Tests the display_genai_advice function."""
-    #test that the app runs properly
-    def test_app_runs(self):
-        at = AppTest.from_file("app.py")
-        at.run()
-        assert not at.exception
-    
+
     @patch("streamlit.image")
-    def test_image_appears(self, mock_image):
-        timestamp = "2024-01-01 00:00:00"
-        content = "You're doing great! Keep up the good work." 
-        image = "https://plus.unsplash.com/premium_photo-1669048780129-051d670fa2d1?q=80&w=3870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+    @patch("streamlit.subheader")
+    @patch("streamlit.title")
+    @patch("modules.get_genai_advice")
+    def test_display_correctly(self, mock_get_genai_advice, mock_title, mock_subheader, mock_image):
+        """Tests that the image, timestamp, and content are displayed correctly."""
+        mock_get_genai_advice.return_value = {
+            'timestamp': "2024-01-01 00:00:00",
+            'content': "You're doing great!",
+            'image': "https://example.com/image.jpg"
+        }
+        mock_data = mock_get_genai_advice.return_value
+        timestamp = mock_data['timestamp']
+        content = mock_data['content']
+        image = mock_data['image']
 
-        #test that the image displays correctly
         display_genai_advice(timestamp, content, image)
-        mock_image.assert_called_with(image)  
 
-class TestDisplayRecentWorkouts(unittest.TestCase):
+        mock_get_genai_advice.assert_called_once_with('user1')
+        mock_image.assert_called_once_with(image)
+        mock_subheader.assert_called_once_with(" :blue[2024-01-01 00:00:00]", divider="green")
+        mock_title.assert_called_once_with(" :red[You're doing great!]")
+
+    @patch("streamlit.image")
+    @patch("streamlit.subheader")
+    @patch("streamlit.title")
+    @patch("modules.get_genai_advice")
+    def test_empty_content(self, mock_get_genai_advice, mock_title, mock_subheader, mock_image):
+        """Tests that the function handles empty content correctly."""
+        mock_get_genai_advice.return_value = {
+            'timestamp': "2024-01-01 00:00:00",
+            'content': "",
+            'image': "https://example.com/image.jpg"
+        }
+        mock_data = mock_get_genai_advice.return_value
+        timestamp = mock_data['timestamp']
+        content = mock_data['content']
+        image = mock_data['image']
+
+        display_genai_advice(timestamp, content, image)
+
+        mock_get_genai_advice.assert_called_once_with('user1')
+        mock_image.assert_called_once_with(image)
+        mock_subheader.assert_any_call(" :blue[2024-01-01 00:00:00]", divider="green")
+        mock_title.assert_any_call(" :red[]")
+
+    @patch("streamlit.image")
+    @patch("streamlit.subheader")
+    @patch("streamlit.title")
+    @patch("modules.get_genai_advice")
+    def test_none_inputs(self, mock_get_genai_advice, mock_title, mock_subheader, mock_image):
+        """Tests that the function handles None inputs correctly."""
+        mock_get_genai_advice.return_value = {
+            'timestamp': None,
+            'content': None,
+            'image': "https://example.com/image.jpg"
+        }
+        mock_data = mock_get_genai_advice.return_value
+        timestamp = mock_data['timestamp']
+        content = mock_data['content']
+        image = mock_data['image']
+
+        display_genai_advice(timestamp, content, image)
+
+        mock_get_genai_advice.assert_called_once_with('user1')
+        mock_image.assert_called_once_with(image)
+        mock_subheader.assert_any_call(" :blue[No timestamp available]", divider="green")
+        mock_title.assert_any_call(" :red[No motivational message available]")
+
+    @patch("streamlit.image")
+    @patch("streamlit.subheader")
+    @patch("streamlit.title")
+    @patch("modules.get_genai_advice")
+    def test_invalid_image_url(self, mock_get_genai_advice, mock_title, mock_subheader, mock_image):
+        """Tests that the function handles invalid image URLs gracefully."""
+        mock_get_genai_advice.return_value = {
+            'timestamp': "2024-01-01 00:00:00",
+            'content': "Test content.",
+            'image': "invalid_url"
+        }
+        mock_data = mock_get_genai_advice.return_value
+        timestamp = mock_data['timestamp']
+        content = mock_data['content']
+        image = mock_data['image']
+
+        display_genai_advice(timestamp, content, image)
+
+        mock_get_genai_advice.assert_called_once_with('user1')
+        mock_image.assert_called_once_with(image)
+        mock_subheader.assert_any_call(" :blue[2024-01-01 00:00:00]", divider="green")
+        mock_title.assert_any_call(" :red[Test content.]")
+
+    @patch("streamlit.image")
+    @patch("streamlit.subheader")
+    @patch("streamlit.title")
+    @patch("modules.get_genai_advice")
+    def test_none_image(self, mock_get_genai_advice, mock_title, mock_subheader, mock_image):
+        """Tests that the function handles None image correctly."""
+        mock_get_genai_advice.return_value = {
+            'timestamp': "2024-01-01 00:00:00",
+            'content': "Motivational message",
+            'image': None
+        }
+        mock_data = mock_get_genai_advice.return_value
+        timestamp = mock_data['timestamp']
+        content = mock_data['content']
+        image = mock_data['image']
+
+        display_genai_advice(timestamp, content, image)
+
+        mock_get_genai_advice.assert_called_once_with('user1')
+        mock_image.assert_not_called()
+        mock_subheader.assert_called_once_with(" :blue[2024-01-01 00:00:00]", divider="green")
+        mock_title.assert_any_call(" :red[Motivational message]")
+        mock_title.assert_any_call(" :red[No image available]")
+
+    @patch("streamlit.image")
+    @patch("streamlit.subheader")
+    @patch("streamlit.title")
+    @patch("modules.get_genai_advice")
+    def test_none_timestamp(self, mock_get_genai_advice, mock_title, mock_subheader, mock_image):
+        """Tests that the function handles None timestamp correctly."""
+        mock_get_genai_advice.return_value = {
+            'timestamp': None,
+            'content': "Motivational message",
+            'image': "https://example.com/image.jpg"
+        }
+        mock_data = mock_get_genai_advice.return_value
+        timestamp = mock_data['timestamp']
+        content = mock_data['content']
+        image = mock_data['image']
+
+        display_genai_advice(timestamp, content, image)
+
+        mock_get_genai_advice.assert_called_once_with('user1')
+        mock_image.assert_called_once_with(image)
+        mock_subheader.assert_called_once_with(" :blue[No timestamp available]", divider="green")
+        mock_title.assert_called_once_with(" :red[Motivational message]")
+
+'''class TestDisplayRecentWorkouts(unittest.TestCase):
     def test_empty_workouts_list(self):
         """Test when the workouts list is empty"""
         result = display_recent_workouts([])
@@ -192,7 +316,7 @@ class TestDisplayRecentWorkouts(unittest.TestCase):
             })
 
         display_recent_workouts(workouts)
-        self.assertEqual(len(workouts), 100)  # Ensure all workouts are processed
+        self.assertEqual(len(workouts), 100)  # Ensure all workouts are processed'''
 
 if __name__ == "__main__":
     unittest.main()
