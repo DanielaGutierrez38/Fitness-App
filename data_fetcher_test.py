@@ -16,11 +16,11 @@ from data_fetcher import get_user_sensor_data, get_genai_advice, load_dotenv, ve
 from vertexai.generative_models import GenerativeModel
 from data_fetcher import _vertexai_initialized
 
-class MockGenerativeModel:
+class MockGenerativeModel: #mock the GenAI model
     def __init__(self, expected_message, *args, **kwargs):
         self.expected_message = expected_message
 
-    def generate_content(self, *args, **kwargs):
+    def generate_content(self, *args, **kwargs): #mock a response from the model
         mock_response = MagicMock()
         mock_response.candidates = [MagicMock()]
         mock_response.candidates[0].content.parts = [MagicMock()]
@@ -29,7 +29,7 @@ class MockGenerativeModel:
 
 class TestDataFetcher(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self): 
         global _vertexai_initialized
         _vertexai_initialized = False
 
@@ -166,16 +166,15 @@ class TestDataFetcher(unittest.TestCase):
     @patch('os.environ.get')
     @patch('random.choice')
     @patch('random.randint')
-    @patch('data_fetcher.datetime')  # Patch the 'datetime' module in data_fetcher
+    @patch('data_fetcher.datetime')  
     @patch('data_fetcher.GenerativeModel')
     @patch('data_fetcher.get_user_workouts')
     def test_get_genai_advice_success(self, mock_get_user_workouts, mock_generative_model, mock_datetime_module, mock_randint, mock_choice, mock_os_environ_get, mock_vertexai_init):
         from data_fetcher import get_genai_advice
 
         mock_os_environ_get.side_effect = lambda key, default=None: {
-        "PROJECT_ID": "test_project",  # Assuming this is for your project ID
-        "TIMEZONE": "America/New_York", # Replace "TIMEZONE" with the actual env var name
-        # Add other environment variables your function might use
+        "PROJECT_ID": "test_project",  
+        "TIMEZONE": "America/New_York", 
         }.get(key, default)
 
         mock_choice.return_value = 'https://test.image.com'
@@ -205,11 +204,11 @@ class TestDataFetcher(unittest.TestCase):
         self.assertEqual(result['timestamp'], "2024-01-01 12:00:00 ")
         #mock_vertexai_init.assert_called_once_with(project="test_project", location="us-central1")
         mock_datetime_class.now.assert_called_once()
-        mock_get_user_workouts.assert_called_once_with("test_user") # Assert that get_user_workouts was called
+        mock_get_user_workouts.assert_called_once_with("test_user") 
 
     @patch('data_fetcher.vertexai.init')
     @patch('random.choice')
-    @patch('data_fetcher.datetime')  # Patch the 'datetime' module in data_fetcher
+    @patch('data_fetcher.datetime')  
     @patch('data_fetcher.GenerativeModel')
     @patch('google.cloud.bigquery.Client')
     def test_get_genai_advice_none_image(self,mock_bigquery_client, mock_generative_model, mock_datetime_module, mock_choice, mock_vertexai_init):
@@ -217,12 +216,11 @@ class TestDataFetcher(unittest.TestCase):
 
         mock_choice.return_value = None
 
-        # Create a mock datetime class with a mock now() method
         mock_datetime_class = MagicMock()
         mock_now = MagicMock()
         mock_now.strftime.return_value = "2024-01-01 12:00:00 "
         mock_datetime_class.now.return_value = mock_now
-        mock_datetime_module.datetime = mock_datetime_class  # Set the datetime attribute of the mocked module
+        mock_datetime_module.datetime = mock_datetime_class  
 
         expected_message = "Keep going!"
         mock_generative_model.return_value = MockGenerativeModel(expected_message)

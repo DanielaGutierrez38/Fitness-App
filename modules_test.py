@@ -98,7 +98,7 @@ class TestDisplayActivitySummary(unittest.TestCase):
 
 class TestDisplayGenAiAdvice(unittest.TestCase):
     """Tests the display_genai_advice function."""
-
+    #use patching and mocking to generate tests
     @patch("streamlit.image")
     @patch("streamlit.subheader")
     @patch("streamlit.title")

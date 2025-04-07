@@ -54,6 +54,7 @@ users = {
 }
 
 
+#asked Gemini for help on how to write the query since it needed a lot of parameters
 def get_user_sensor_data(user_id, workout_id):
 
     '''Fetches data from BigQuery using a given SQL query.
@@ -66,9 +67,6 @@ def get_user_sensor_data(user_id, workout_id):
         A list of rows, where each row is a dictionary, or None if an error occurs.
     '''
     try:
-        # Basic sanitization to prevent simple SQL injection
-        '''user_id = re.sub(r"[^a-zA-Z0-9_ -]", "", user_id)
-        workout_id = re.sub(r"[^a-zA-Z0-9_ -]", "", workout_id)'''
         client = bigquery.Client(project="keishlyanysanabriatechx25")
 
         query_string = f"""
@@ -102,10 +100,8 @@ def get_user_sensor_data(user_id, workout_id):
         print(f"Error fetching BigQuery data: {e}")
         return None
 
-
 def get_user_workouts(user_id):
     client = bigquery.Client()
-    #print(f"Executing query for UserId: {user_id}")
     query = f"""
         SELECT
             WorkoutId,
@@ -124,7 +120,6 @@ def get_user_workouts(user_id):
             UserId = '{user_id}'
     """
     query_job = client.query(query)
-    #print(f"Query job ID: {query_job.job_id}") # Useful for BigQuery job monitoring
     results = query_job.result()
     workouts = []
     for row in results:
@@ -207,10 +202,7 @@ def get_user_posts(user_id):
 
 def get_genai_advice(user_id):
 
-    '''load_dotenv()
-
-    vertexai.init(project=os.environ.get("dagutierrez17techx25"), location="us-central1")'''
-
+    #had to do this global vertexai variable to handle mocks in tests correctly
     global _vertexai_initialized
     load_dotenv()
     if not _vertexai_initialized:
@@ -220,12 +212,14 @@ def get_genai_advice(user_id):
 
     workouts = get_user_workouts(user_id)
 
+    #call Gemini and give it instructions on how to answer
     model = GenerativeModel("gemini-1.5-flash-002")
 
     system_instruction = ("You are a the main motivational trainer for a fitness app. You are getting information about the user's past workouts in the 'workouts' list of dictionaries")
 
     response = model.generate_content("Please give me a motivational message for the user of this fitness app based on the 'workouts' lis of dictionaries that is received by calling 'get_user_workouts'. Please just output 1 motivational message, and also please don't mention 'get_user_workouts', just say the message")
     
+    #added more possible images and randomly select 1
     image = random.choice([
         'https://plus.unsplash.com/premium_photo-1669048780129-051d670fa2d1?q=80&w=3870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
         'https://joggo.run/blog/app/uploads/2022/01/running-inspiration-660x440.jpg.webp',
@@ -233,9 +227,8 @@ def get_genai_advice(user_id):
         None,
     ])
 
-    id = random.randint(1, 10000)
-    #advice_timestamp = datetime.datetime.now()
-    timezone_name = 'America/New_York' # Example: Replace with your desired timezone
+    id = random.randint(1, 10000) #create a random id for the advice
+    timezone_name = 'America/New_York'  #get this timezone to display current time
     timezone = pytz.timezone(timezone_name)
     now_in_timezone = datetime.datetime.now(timezone)
     advice_timestamp = now_in_timezone.strftime("%Y-%m-%d %H:%M:%S ")
