@@ -446,5 +446,86 @@ class TestGetUserPosts(unittest.TestCase):
             self.mock_client.query.assert_called_once()
             # In a real fix, we would verify query parameters were used correctly
 
+import unittest
+from unittest.mock import MagicMock, patch
+from module import get_user_workouts  # Adjust to the correct import path
+from google.cloud import bigquery
+import datetime
+
+class TestDataFetcher(unittest.TestCase):
+
+    @patch("google.cloud.bigquery.Client")
+    def test_get_user_workouts_valid_user(self, mock_bigquery_client):
+        mock_client_instance = mock_bigquery_client.return_value
+        mock_query_job = mock_client_instance.query.return_value
+        
+        # Mocking the result of the query
+        mock_query_job.result.return_value = [
+            MagicMock(
+                workout_id="workout1", 
+                start_timestamp="2024-07-29 07:00:00", 
+                end_timestamp="2024-07-29 08:00:00", 
+                start_lat_lng={"StartLocationLat": 37.7749, "StartLocationLong": -122.4194},
+                end_lat_lng={"EndLocationLat": 37.8049, "EndLocationLong": -122.4210},
+                distance=5.0,
+                steps=8000,
+                calories_burned=400
+            )
+        ]
+        
+        expected_result = [{
+            'workout_id': "workout1",
+            'start_timestamp': "2024-07-29 07:00:00",
+            'end_timestamp': "2024-07-29 08:00:00",
+            'start_lat_lng': (37.7749, -122.4194),
+            'end_lat_lng': (37.8049, -122.4210),
+            'distance': 5.0,
+            'steps': 8000,
+            'calories_burned': 400,
+        }]
+        
+        # Check if the function returns the expected result
+        self.assertEqual(get_user_workouts("user1"), expected_result)
+
+    @patch("google.cloud.bigquery.Client")
+    def test_get_user_workouts_no_workouts(self, mock_bigquery_client):
+        mock_client_instance = mock_bigquery_client.return_value
+        mock_query_job = mock_client_instance.query.return_value
+        mock_query_job.result.return_value = []  # No workouts for the given user
+        
+        # Check if the function returns an empty list
+        self.assertEqual(get_user_workouts("user_unknown"), [])
+
+    @patch("google.cloud.bigquery.Client")
+    def test_get_user_workouts_multiple_workouts(self, mock_bigquery_client):
+        mock_client_instance = mock_bigquery_client.return_value
+        mock_query_job = mock_client_instance.query.return_value
+        
+        mock_query_job.result.return_value = [
+            MagicMock(
+                workout_id="workout1", 
+                start_timestamp="2024-07-29 07:00:00", 
+                end_timestamp="2024-07-29 08:00:00", 
+                start_lat_lng={"StartLocationLat": 37.7749, "StartLocationLong": -122.4194},
+                end_lat_lng={"EndLocationLat": 37.8049, "EndLocationLong": -122.4210},
+                distance=5.0,
+                steps=8000,
+                calories_burned=400
+            ),
+            MagicMock(
+                workout_id="workout2", 
+                start_timestamp="2024-07-30 09:00:00", 
+                end_timestamp="2024-07-30 10:00:00", 
+                start_lat_lng={"StartLocationLat": 40.7128, "StartLocationLong": -74.0060},
+                end_lat_lng={"EndLocationLat": 40.7308, "EndLocationLong": -73.9976},
+                distance=6.5,
+                steps=10000,
+                calories_burned=500
+            )
+        ]
+        
+        # Check if the function returns two workouts
+        self.assertEqual(len(get_user_workouts("user1")), 2)
+
 if __name__ == "__main__":
     unittest.main()
