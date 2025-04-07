@@ -137,7 +137,7 @@ def display_post(username, user_image, timestamp, content, post_image=None):
         """
     else:
         # No image version - skip the image tag entirely
-        html_content = f"""
+        html_content = f
         <div class="post-container">
             <div class="user-box">
                 <div class="user-row">
