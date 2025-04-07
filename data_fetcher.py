@@ -139,13 +139,37 @@ def get_user_workouts(user_id):
 
 
 def get_user_profile(user_id):
-    """Returns information about the given user.
-
-    This function currently returns random data. You will re-write it in Unit 3.
+    # function: get_user_profile
+    # input: user_id (str) - the ID of the user whose profile is being fetched
+    # output: dict - contains full_name, username, date_of_birth, profile_image, and friends list
+    
+    client = bigquery.Client()
+    
+    query = """
+        SELECT full_name, username, date_of_birth, profile_image,
+               ARRAY(SELECT friend_id FROM `my_project.my_dataset.friends`
+                     WHERE user_id = @user_id) AS friends
+        FROM `my_project.my_dataset.users`
+        WHERE user_id = @user_id
     """
-    if user_id not in users:
-        raise ValueError(f'User {user_id} not found.')
-    return users[user_id]
+    
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[bigquery.ScalarQueryParameter("user_id", "STRING", user_id)]
+    )
+    
+    result = client.query(query, job_config=job_config).result()
+    
+    row = next(result, None)
+    if row:
+        return {
+            "full_name": row.full_name,
+            "username": row.username,
+            "date_of_birth": row.date_of_birth,
+            "profile_image": row.profile_image,
+            "friends": row.friends
+        }
+    else:
+        return {}
 
 '''
 Funcion partially created by ChatGPT and Claude: "fix the following Function: get_user_posts in data_fetcher.py 
