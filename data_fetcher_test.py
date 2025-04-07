@@ -16,6 +16,7 @@ import sys
 import os
 from data_fetcher import get_user_posts
 
+# Partially created by Gemini, Claude, and ChatGPT: "Create unittests for get_user_posts"
 class TestGetUserPosts(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures before each test method."""
