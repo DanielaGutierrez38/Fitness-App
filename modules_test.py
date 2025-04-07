@@ -243,7 +243,6 @@ class TestDisplayGenAiAdvice(unittest.TestCase):
 
 class TestGetUserWorkouts(unittest.TestCase):
 
-    class TestGetUserWorkouts(unittest.TestCase):
 
     def mock_row(self, **kwargs):
         row = MagicMock()
