@@ -12,7 +12,7 @@ import os
 import datetime
 import pytz
 import sys
-from data_fetcher import get_user_sensor_data, get_genai_advice, load_dotenv, vertexai
+from data_fetcher import get_user_sensor_data, get_genai_advice, load_dotenv, vertexai, get_user_profile
 from vertexai.generative_models import GenerativeModel
 from data_fetcher import _vertexai_initialized
 
@@ -524,54 +524,70 @@ class TestGetUserProfile(unittest.TestCase):
     @patch("google.cloud.bigquery.Client")
     def test_get_user_profile_success(self, mock_bigquery_client):
         """Tests successful retrieval of user profile data with friends."""
+        mock_row_data = (
+            'user1',
+            'Remi',
+            'remi_the_rems',
+            'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
+            datetime.date(1990, 1, 1),
+            ['user2', 'user3', 'user4']
+        )
 
-        mock_user_result = MagicMock()
-        mock_user_result.__iter__.return_value = iter([
-            {
-                'UserId': 'user1',
-                'Name': 'Remi',
-                'Username': 'remi_the_rems',
-                'DateOfBirth': datetime.date(1990, 1, 1),
-                'ImageUrl': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg'
-            }
-        ])
+        mock_row = MagicMock(
+            UserId=mock_row_data[0],
+            Name=mock_row_data[1],
+            Username=mock_row_data[2],
+            ImageUrl=mock_row_data[3],
+            DateOfBirth=mock_row_data[4],
+            friends=mock_row_data[5]
+        )
 
-        mock_friends_result = MagicMock()
-        mock_friends_result.__iter__.return_value = iter([
-            {'FriendId': 'user2'},
-            {'FriendId': 'user3'},
-            {'FriendId': 'user4'}
-        ])
+        mock_result = MagicMock()
+        mock_result.__iter__.return_value = iter([mock_row])
+        mock_result.__next__.return_value = mock_row  # Mock the next() call directly
 
         mock_client = MagicMock()
-        mock_client.query.side_effect = [mock_user_result, mock_friends_result]
+        mock_client.query.return_value.result.return_value = mock_result
         mock_bigquery_client.return_value = mock_client
 
-        from data_fetcher import get_user_profile
         result = get_user_profile("user1")
 
         self.assertEqual(result["full_name"], "Remi")
         self.assertEqual(result["username"], "remi_the_rems")
-        self.assertEqual(result["date_of_birth"], "1990-01-01")
+        self.assertEqual(result["date_of_birth"], datetime.date(1990, 1, 1))
         self.assertEqual(result["profile_image"], "https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg")
-        self.assertEqual(result["friends"], ["user2", "user3", "user4"])
+        self.assertEqual(result["friends"], ['user2', 'user3', 'user4'])
+
+        # Ensure the query was called with the correct parameters
+        mock_client.query.assert_called_once()
+        called_with_args, called_with_kwargs = mock_client.query.call_args
+        self.assertIn("WHERE\n    u.UserId = 'user1'", called_with_args[0])
+        self.assertIsInstance(called_with_kwargs['job_config'], bigquery.QueryJobConfig)
+        self.assertEqual(called_with_kwargs['job_config'].query_parameters[0].name, "user_id")
+        self.assertEqual(called_with_kwargs['job_config'].query_parameters[0].value, "user1")
 
     @patch("google.cloud.bigquery.Client")
     def test_get_user_profile_not_found(self, mock_bigquery_client):
-        """Tests error handling when user is not found in database."""
-
-        mock_user_result = MagicMock()
-        mock_user_result.__iter__.return_value = iter([])  # No user found
+        """Tests the case where the user is not found."""
+        mock_result = MagicMock()
+        mock_result.__iter__.return_value = iter([])
+        mock_result.__next__.side_effect = StopIteration  # Mock next() to raise StopIteration
 
         mock_client = MagicMock()
-        mock_client.query.side_effect = [mock_user_result]
+        mock_client.query.return_value.result.return_value = mock_result
         mock_bigquery_client.return_value = mock_client
 
-        from data_fetcher import get_user_profile
-        with self.assertRaises(ValueError) as context:
-            get_user_profile("nonexistent_user")
+        result = get_user_profile("nonexistent_user")
 
-        self.assertIn("User nonexistent_user not found", str(context.exception))
+        self.assertEqual(result, {})
+
+        # Ensure the query was called with the correct parameters
+        mock_client.query.assert_called_once()
+        called_with_args, called_with_kwargs = mock_client.query.call_args
+        self.assertIn("WHERE\n    u.UserId = 'nonexistent_user'", called_with_args[0])
+        self.assertIsInstance(called_with_kwargs['job_config'], bigquery.QueryJobConfig)
+        self.assertEqual(called_with_kwargs['job_config'].query_parameters[0].name, "user_id")
+        self.assertEqual(called_with_kwargs['job_config'].query_parameters[0].value, "nonexistent_user")
 
 if __name__ == "__main__":
     unittest.main()

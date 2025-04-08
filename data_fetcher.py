@@ -143,15 +143,31 @@ def get_user_profile(user_id):
     # input: user_id (str) - the ID of the user whose profile is being fetched
     # output: dict - contains full_name, username, date_of_birth, profile_image, and friends list
     
-    client = bigquery.Client()
+    client = bigquery.Client(project="keishlyanysanabriatechx25")
     
-    query = """
-        SELECT full_name, username, date_of_birth, profile_image,
-               ARRAY(SELECT friend_id FROM `my_project.my_dataset.friends`
-                     WHERE user_id = @user_id) AS friends
-        FROM `my_project.my_dataset.users`
-        WHERE user_id = @user_id
+    query = f"""
+        SELECT
+    u.UserId,
+    u.Name,
+    u.Username,
+    u.ImageUrl,
+    u.DateOfBirth,
+    ARRAY_AGG(CASE
+        WHEN f.UserId1 = u.UserId THEN f.UserId2
+        WHEN f.UserId2 = u.UserId THEN f.UserId1
+        ELSE NULL
+    END IGNORE NULLS) AS friends
+    FROM
+    keishlyanysanabriatechx25.bytemeproject.Users u
+    LEFT JOIN
+    keishlyanysanabriatechx25.bytemeproject.Friends f ON u.UserId = f.UserId1 OR u.UserId = f.UserId2
+    WHERE
+    u.UserId = '{user_id}'
+    GROUP BY
+    u.UserId, u.Name, u.Username, u.ImageUrl, u.DateOfBirth
     """
+
+    #ARRAY(SELECT friend_id FROM keishlyanysanabriatechx25.bytemeproject.Friends ) AS friends
     
     job_config = bigquery.QueryJobConfig(
         query_parameters=[bigquery.ScalarQueryParameter("user_id", "STRING", user_id)]
@@ -162,10 +178,10 @@ def get_user_profile(user_id):
     row = next(result, None)
     if row:
         return {
-            "full_name": row.full_name,
-            "username": row.username,
-            "date_of_birth": row.date_of_birth,
-            "profile_image": row.profile_image,
+            "full_name": row.Name,
+            "username": row.Username,
+            "date_of_birth": row.DateOfBirth,
+            "profile_image": row.ImageUrl,
             "friends": row.friends
         }
     else:

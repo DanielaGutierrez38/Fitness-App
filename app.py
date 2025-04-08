@@ -53,6 +53,54 @@ def display_app_page():
         sensor_data = get_user_sensor_data(userId, 'workout1')
         display_sensor_data(sensor_data)
 
+    with tab6:
+        client = bigquery.Client()
+        
+
+        def display_all_posts():
+
+            posts = get_user_posts(userId)
+            if posts:
+                for post in posts:
+                    user_id = post.get('user_id', 'Unknown')
+                    timestamp = post.get('timestamp', 'No timestamp')
+                    content = post.get('content', 'No content')
+                    image_url = post.get('image', '')
+
+                    st.write(f"\nWhat's on your mind: {user_id} - {timestamp}: {content}")
+
+                    if image_url and isinstance(image_url, str) and image_url.startswith("http"):
+                        try:
+                            st.image(image_url, width=150)
+                        except Exception as e:
+                            st.error(f"Error displaying image from URL: {e}")
+                    else:
+                        st.write("Image not available.")
+            else:
+                st.write("No posts available.")
+
+ 
+        def display_community_page(user_id):
+             
+             genai_advice = get_genai_advice(user_id)
+             user_profile = get_user_profile(user_id)
+ 
+             if user_profile:
+                 st.write(f"User Profile: {user_profile['full_name']} (@{user_profile['username']})")
+                 st.image(user_profile['profile_image'], width=100)
+                 st.write("News Feed:")
+                 display_all_posts()
+                 st.write("\nAdvice & Encouragement:")
+                 if genai_advice:
+                     st.write(f"Advice: {genai_advice['content']}")
+                     if genai_advice['image']:
+                        st.image(genai_advice['image'], width=150)
+                 else:
+                     st.write("No GenAI advice found.")
+             else:
+                 st.write(f'user {user_id} not found')
+        display_community_page(userId)
+
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':
     display_app_page()
