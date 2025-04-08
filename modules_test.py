@@ -19,7 +19,7 @@ import datetime
 
 # Write your tests below
 
-'''class TestDisplayPost(unittest.TestCase):
+class TestDisplayPost(unittest.TestCase):
     """Tests the display_post function."""
 
     @patch("modules.requests.get")
@@ -62,12 +62,11 @@ import datetime
 
 class TestDisplayActivitySummary(unittest.TestCase):
     """Tests the display_activity_summary function."""
-    
-    #ChatGPT helped write the syntax for these tests 
+
     def test_function_runs_without_error(self):
         sample_workouts = [
-        {"start_timestamp": "2025-03-01 08:00", "end_timestamp": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories_burned": 400},
-        {"start_timestamp": "2025-03-02 08:30", "end_timestamp": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories_burned": 550},
+            {"StartTimestamp": "2025-03-01 08:00", "end_timestamp": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories_burned": 400},
+            {"StartTimestamp": "2025-03-02 08:30", "end_timestamp": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories_burned": 550},
         ]
         try:
             display_activity_summary(sample_workouts)
@@ -79,22 +78,21 @@ class TestDisplayActivitySummary(unittest.TestCase):
     def test_table_renders(self, mock_pyplot, mock_dataframe):
         """Test that the summary table is rendered using placeholders for the Streamlit environment"""
         sample_workouts = [
-            {"start_timestamp": "2025-03-01 08:00", "end_timestamp": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories_burned": 400},
-            {"start_timestamp": "2025-03-02 08:30", "end_timestamp": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories_burned": 550},
-        ]
-        display_activity_summary(sample_workouts)  
-        mock_dataframe.assert_called_once()  # Ensure dataframe is called
-
-    @patch('streamlit.dataframe')
-    @patch('streamlit.pyplot')
-    def test_graph_renders(self, mock_pyplot, mock_dataframe):
-        """Test that the graph is rendered using placeholders for the Streamlit environment"""
-        sample_workouts = [
-            {"start_timestamp": "2025-03-01 08:00", "end_timestamp": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories_burned": 400},
-            {"start_timestamp": "2025-03-02 08:30", "end_timestamp": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories_burned": 550},
+            {"StartTimestamp": "2025-03-01 08:00", "end_timestamp": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories_burned": 400},
+            {"StartTimestamp": "2025-03-02 08:30", "end_timestamp": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories_burned": 550},
         ]
         display_activity_summary(sample_workouts)
-        mock_pyplot.assert_called_once()  # Ensure plot is called'''
+        mock_dataframe.assert_called_once()  # Ensure dataframe is called
+
+    @patch('streamlit.pyplot')
+    def test_graph_renders(self, mock_pyplot):
+        """Test that the graph is rendered using placeholders for the Streamlit environment"""
+        sample_workouts = [
+            {"StartTimestamp": "2025-03-01 08:00", "end_timestamp": "2025-03-01 09:00", "distance": 5, "steps": 6000, "calories_burned": 400},
+            {"StartTimestamp": "2025-03-02 08:30", "end_timestamp": "2025-03-02 09:15", "distance": 7.2, "steps": 8000, "calories_burned": 550},
+        ]
+        display_activity_summary(sample_workouts)
+        mock_pyplot.assert_called_once()  # Ensure plot is called
 
 
 class TestDisplayGenAiAdvice(unittest.TestCase):
