@@ -7,7 +7,7 @@
 
 import streamlit as st
 from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts, display_sensor_data
-from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts
+from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, add_post_to_database
 
 # New imports
 from datetime import datetime
@@ -18,7 +18,7 @@ def display_app_page():
     """Displays the home page of the app."""
     st.title('Welcome to SDS!')
 
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Home", "GenAI Advice", "Activity Summary", "Recent Workouts", "Sensor Data", "Community"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["Home", "GenAI Advice", "Activity Summary", "Recent Workouts", "Sensor Data", "Community", "Activity Page"])
     userId = None # Example data
 
     with tab1:
@@ -100,6 +100,73 @@ def display_app_page():
              else:
                  st.write(f'user {user_id} not found')
         display_community_page(userId)
+    
+    # Partially created by Claude AI: "Create a tab that displays activity page with given instructions"
+    with tab7:
+        # New User Activity tab that integrates all required components
+        userId = 'user1'
+        workouts = get_user_workouts(userId)
+       
+        # Display user activity page
+        st.header("Your Activity Dashboard")
+       
+        # Display recent 3 workouts
+        if workouts:
+            # Sort workouts by start time (most recent first)
+            workouts.sort(key=lambda x: x['StartTimestamp'], reverse=True)
+            # Get only the 3 most recent workouts
+            recent_workouts = workouts[:3]
+            display_recent_workouts(recent_workouts)
+        else:
+            st.write("No recent workouts. Let's get started!")
+       
+        # Display activity summary
+        if workouts:
+            display_activity_summary(workouts)
+        else:
+            st.write("No activity data available yet.")
+       
+        # Share section
+        st.header("Share Your Achievement")
+       
+        # Calculate stats to share (if workouts exist)
+        if workouts:
+            total_steps = sum(workout.get('steps', 0) for workout in workouts)
+            total_distance = sum(workout.get('distance', 0) for workout in workouts)
+            total_calories = sum(workout.get('calories_burned', 0) for workout in workouts)
+           
+            # Create columns for share buttons
+            col1, col2, col3 = st.columns(3)
+           
+            with col1:
+                if st.button(f"Share Steps: {total_steps}"):
+                    post_content = f"I've taken {total_steps} steps in my fitness journey! #FitnessGoals"
+                    add_post_to_database(userId, post_content)
+                    st.success("Post shared successfully!")
+           
+            with col2:
+                if st.button(f"Share Distance: {total_distance:.2f} km"):
+                    post_content = f"I've covered {total_distance:.2f} km so far! #ActiveLifestyle"
+                    add_post_to_database(userId, post_content)
+                    st.success("Post shared successfully!")
+           
+            with col3:
+                if st.button(f"Share Calories: {total_calories} burned"):
+                    post_content = f"I've burned {total_calories} calories through my workouts! #HealthyLiving"
+                    add_post_to_database(userId, post_content)
+                    st.success("Post shared successfully!")
+                   
+            # Option to share latest workout
+            latest_workout = workouts[0]  # First workout is the most recent after sorting
+            if st.button("Share Latest Workout"):
+                latest_steps = latest_workout.get('Steps', 0)
+                latest_distance = latest_workout.get('Distance (km)', 0)
+                latest_calories = latest_workout.get('Calories Burned', 0)
+                post_content = f"Just completed a workout! {latest_steps} steps, {latest_distance:.2f} km, and burned {latest_calories} calories! #WorkoutComplete"
+                add_post_to_database(userId, post_content)
+                st.success("Latest workout shared!")
+        else:
+            st.write("Complete workouts to unlock sharing!")
 
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':
