@@ -240,6 +240,59 @@ def get_user_posts(user_id):
     
     return posts
 
+'''
+Function created by Claude AI: "create a function that adds by using these lines, it adds the post to the database:
+post_content = f"I've taken {total_steps} steps in my fitness journey! #FitnessGoals" add_post_to_database(userId, post_content)"
+'''
+def add_post_to_database(user_id, content, image_url=None):
+    """Adds a post to the BigQuery database.
+   
+    Args:
+        user_id (str): The ID of the user creating the post.
+        content (str): The content of the post.
+        image_url (str, optional): URL of the image for the post. Defaults to None.
+       
+    Returns:
+        bool: True if successful, False otherwise.
+    """
+    try:
+        # Initialize a BigQuery client
+        client = bigquery.Client()
+       
+        # Generate a unique post ID (you might have a different approach)
+        import uuid
+        post_id = str(uuid.uuid4())
+       
+        # Get current timestamp
+        from datetime import datetime
+        current_timestamp = datetime.now()
+       
+        # Prepare the INSERT query
+        table_id = "keishlyanysanabriatechx25.bytemeproject.Posts"
+       
+        # Prepare the row to be inserted
+        rows_to_insert = [{
+            'PostId': post_id,
+            'AuthorId': user_id,
+            'Timestamp': current_timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            'Content': content,
+            'ImageUrl': image_url,
+        }]
+       
+        # Insert the row into BigQuery
+        errors = client.insert_rows_json(table_id, rows_to_insert)
+       
+        if errors == []:
+            print(f"New post added successfully")
+            return True
+        else:
+            print(f"Errors occurred while adding post: {errors}")
+            return False
+           
+    except Exception as e:
+        print(f"Error adding post to database: {e}")
+        return False
+
 def get_genai_advice(user_id):
 
     #had to do this global vertexai variable to handle mocks in tests correctly
