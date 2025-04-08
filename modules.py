@@ -9,7 +9,6 @@
 
 import streamlit as st
 from internals import create_component
-import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -17,6 +16,10 @@ import matplotlib.pyplot as plt
 import requests
 import base64
 from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts
+
+# Import for user_profile
+import datetime
+from google.cloud import bigquery
 
 # This one has been written for you as an example. You may change it as wanted.
 def display_my_custom_component(value):
@@ -239,3 +242,143 @@ def display_sensor_data(sensor_list):
         #st.info("No sensor data found for the specified User ID and Workout ID.")
     else:
         st.warning("Invalid User ID and Workout ID.")
+
+def display_user_profile(user_id):
+    """Displays the user profile information in a well-formatted layout.
+    
+    Args:
+        user_id (str): The ID of the user whose profile is being displayed.
+    """
+    # Get user profile data
+    user_profile = get_user_profile(user_id)
+    
+    if not user_profile:
+        st.error(f"User profile not found for ID: {user_id}")
+        return
+    
+    # Create layout with columns
+    col1, col2 = st.columns([1, 2])
+    
+    # Profile image and basic info
+    with col1:
+        if user_profile.get("profile_image"):
+            st.image(user_profile["profile_image"], width=200)
+        else:
+            # Display placeholder if no image
+            st.image("https://via.placeholder.com/200x200?text=No+Image", width=200)
+        
+        st.write(f"**@{user_profile['username']}**")
+        
+        # Add buttons for actions
+        st.button("Edit Profile")
+        st.button("Add Friend")
+    
+    # User details in right column
+    with col2:
+        st.header(user_profile["full_name"])
+        
+        # Format and display date of birth
+        if user_profile.get("date_of_birth"):
+            dob = user_profile["date_of_birth"]
+            if isinstance(dob, str):
+                st.write(f"**Date of Birth:** {dob}")
+            else:
+                st.write(f"**Date of Birth:** {dob.strftime('%B %d, %Y')}")
+        
+        # Friends count
+        friend_count = len(user_profile.get("friends", []))
+        st.write(f"**Friends:** {friend_count}")
+        
+        # Additional profile stats could go here
+        # Example: posts count
+        posts = get_user_posts(user_id)
+        st.write(f"**Posts:** {len(posts)}")
+    
+    # Display tabs for different sections of the profile
+    profile_tabs = st.tabs(["Posts", "Friends", "Activity"])
+    
+    # Posts tab
+    with profile_tabs[0]:
+        posts = get_user_posts(user_id)
+        if posts:
+            for post in posts:
+                with st.container():
+                    st.markdown(f"**{post['timestamp']}**")
+                    st.write(post['content'])
+                    
+                    if post.get('image'):
+                        st.image(post['image'])
+                    
+                    st.divider()
+        else:
+            st.write("No posts yet.")
+    
+    # Friends tab
+    with profile_tabs[1]:
+        if user_profile.get("friends") and len(user_profile["friends"]) > 0:
+            # Create grid layout for friends
+            friends_per_row = 4
+            num_friends = len(user_profile["friends"])
+            
+            for i in range(0, num_friends, friends_per_row):
+                cols = st.columns(min(friends_per_row, num_friends - i))
+                
+                for j in range(min(friends_per_row, num_friends - i)):
+                    with cols[j]:
+                        friend_id = user_profile["friends"][i + j]
+                        friend_profile = get_user_profile(friend_id)
+                        
+                        if friend_profile:
+                            if friend_profile.get("profile_image"):
+                                st.image(friend_profile["profile_image"], width=100)
+                            else:
+                                st.image("https://via.placeholder.com/100x100?text=No+Image", width=100)
+                            
+                            st.write(f"**{friend_profile['username']}**")
+                            st.write(friend_profile["full_name"])
+                        else:
+                            st.write(f"Friend ID: {friend_id}")
+                            st.write("(Profile unavailable)")
+        else:
+            st.write("No friends added yet.")
+    
+    # Activity tab
+    with profile_tabs[2]:
+        # Assuming you have a function to get user workouts
+        try:
+            workouts = get_user_workouts(user_id)
+            if workouts and len(workouts) > 0:
+                # Sort workouts by start time (most recent first)
+                workouts.sort(key=lambda x: x['StartTimestamp'], reverse=True)
+                
+                # Take only 5 most recent
+                recent_workouts = workouts[:5]
+                
+                for workout in recent_workouts:
+                    with st.container():
+                        # Format timestamp
+                        start_time = workout['StartTimestamp']
+                        formatted_time = start_time
+                        if isinstance(start_time, datetime.datetime):
+                            formatted_time = start_time.strftime('%Y-%m-%d %H:%M')
+                        
+                        st.write(f"**Workout on {formatted_time}**")
+                        
+                        # Create columns for workout stats
+                        stat_cols = st.columns(3)
+                        
+                        with stat_cols[0]:
+                            st.metric("Distance", f"{workout.get('Distance (km)', 0):.2f} km")
+                        
+                        with stat_cols[1]:
+                            st.metric("Steps", workout.get('Steps', 0))
+                        
+                        with stat_cols[2]:
+                            st.metric("Calories", workout.get('Calories Burned', 0))
+                        
+                        st.divider()
+            else:
+                st.write("No workout activity recorded yet.")
+        except Exception as e:
+            st.write("Unable to load activity data.")
+            st.error(str(e))
