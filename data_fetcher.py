@@ -169,11 +169,7 @@ def get_user_profile(user_id):
 
     #ARRAY(SELECT friend_id FROM keishlyanysanabriatechx25.bytemeproject.Friends ) AS friends
     
-    job_config = bigquery.QueryJobConfig(
-        query_parameters=[bigquery.ScalarQueryParameter("user_id", "STRING", user_id)]
-    )
-    
-    result = client.query(query, job_config=job_config).result()
+    result = client.query(query).result()
     
     row = next(result, None)
     if row:
