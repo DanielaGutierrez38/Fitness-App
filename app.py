@@ -6,7 +6,7 @@
 #############################################################################
 
 import streamlit as st
-from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts, display_sensor_data
+from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts, display_sensor_data, display_user_profile
 from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, add_post_to_database
 
 # New imports
@@ -18,7 +18,7 @@ def display_app_page():
     """Displays the home page of the app."""
     st.title('Welcome to SDS!')
 
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["Home", "GenAI Advice", "Activity Summary", "Recent Workouts", "Sensor Data", "Community", "Activity Page"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(["Home", "GenAI Advice", "Activity Summary", "Recent Workouts", "Sensor Data", "Community", "Activity Page", "User Profile"])
     userId = None # Example data
 
     with tab1:
@@ -167,6 +167,13 @@ def display_app_page():
                 st.success("Latest workout shared!")
         else:
             st.write("Complete workouts to unlock sharing!")
+    
+    with tab8:
+        # Display user profile
+        userId = 'user1'  # You can use the current logged-in user's ID here
+        display_user_profile(userId)  # Call the profile display function
+
+        
 
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':
