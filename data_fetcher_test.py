@@ -561,10 +561,15 @@ class TestGetUserProfile(unittest.TestCase):
         # Ensure the query was called with the correct parameters
         mock_client.query.assert_called_once()
         called_with_args, called_with_kwargs = mock_client.query.call_args
-        self.assertIn("WHERE\n    u.UserId = 'user1'", called_with_args[0])
-        self.assertIsInstance(called_with_kwargs['job_config'], bigquery.QueryJobConfig)
-        self.assertEqual(called_with_kwargs['job_config'].query_parameters[0].name, "user_id")
-        self.assertEqual(called_with_kwargs['job_config'].query_parameters[0].value, "user1")
+
+        # Check that the query uses the parameterized placeholder
+        self.assertIn("u.UserId = @user_id", called_with_args[0])
+
+        # Check that the correct parameter value was passed
+        query_params = called_with_kwargs['job_config'].query_parameters
+        user_id_param = next((param for param in query_params if param.name == 'user_id'), None)
+        self.assertIsNotNone(user_id_param)
+        self.assertEqual(user_id_param.value, 'user1')
 
     @patch("google.cloud.bigquery.Client")
     def test_get_user_profile_not_found(self, mock_bigquery_client):
@@ -583,11 +588,17 @@ class TestGetUserProfile(unittest.TestCase):
 
         # Ensure the query was called with the correct parameters
         mock_client.query.assert_called_once()
+
         called_with_args, called_with_kwargs = mock_client.query.call_args
-        self.assertIn("WHERE\n    u.UserId = 'nonexistent_user'", called_with_args[0])
-        self.assertIsInstance(called_with_kwargs['job_config'], bigquery.QueryJobConfig)
-        self.assertEqual(called_with_kwargs['job_config'].query_parameters[0].name, "user_id")
-        self.assertEqual(called_with_kwargs['job_config'].query_parameters[0].value, "nonexistent_user")
+
+        # Check that the query uses the parameterized placeholder
+        self.assertIn("u.UserId = @user_id", called_with_args[0])
+
+        # Check that the correct parameter value was passed
+        query_params = called_with_kwargs['job_config'].query_parameters
+        user_id_param = next((param for param in query_params if param.name == 'user_id'), None)
+        self.assertIsNotNone(user_id_param)
+        self.assertEqual(user_id_param.value, 'user1')
 
 if __name__ == "__main__":
     unittest.main()
