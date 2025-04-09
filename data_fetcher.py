@@ -137,7 +137,7 @@ def get_user_workouts(user_id):
     #print(workouts)
     return workouts
 
-
+# Function fixed by Claude: "Fix code so that it has job_config"
 def get_user_profile(user_id):
     # function: get_user_profile
     # input: user_id (str) - the ID of the user whose profile is being fetched
@@ -145,7 +145,7 @@ def get_user_profile(user_id):
     
     client = bigquery.Client(project="keishlyanysanabriatechx25")
     
-    query = f"""
+    query = """
         SELECT
     u.UserId,
     u.Name,
@@ -162,14 +162,17 @@ def get_user_profile(user_id):
     LEFT JOIN
     keishlyanysanabriatechx25.bytemeproject.Friends f ON u.UserId = f.UserId1 OR u.UserId = f.UserId2
     WHERE
-    u.UserId = '{user_id}'
+    u.UserId = @user_id
     GROUP BY
     u.UserId, u.Name, u.Username, u.ImageUrl, u.DateOfBirth
     """
-
-    #ARRAY(SELECT friend_id FROM keishlyanysanabriatechx25.bytemeproject.Friends ) AS friends
     
-    result = client.query(query).result()
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[bigquery.ScalarQueryParameter("user_id", "STRING", user_id)]
+    )
+    
+    # Pass the job_config to the query method
+    result = client.query(query, job_config=job_config).result()
     
     row = next(result, None)
     if row:
