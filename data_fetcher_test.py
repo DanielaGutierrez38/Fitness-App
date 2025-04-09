@@ -571,6 +571,7 @@ class TestGetUserProfile(unittest.TestCase):
         self.assertIsNotNone(user_id_param)
         self.assertEqual(user_id_param.value, 'user1')
 
+    # Function fixed by ChatGPT: "Fix for there to not appear this error: FAILED data_fetcher_test.py::TestGetUserProfile::test_get_user_profile_not_found - AssertionError: 'nonexistent_user' != 'user1'- nonexistent_user"
     @patch("google.cloud.bigquery.Client")
     def test_get_user_profile_not_found(self, mock_bigquery_client):
         """Tests the case where the user is not found."""
@@ -598,7 +599,7 @@ class TestGetUserProfile(unittest.TestCase):
         query_params = called_with_kwargs['job_config'].query_parameters
         user_id_param = next((param for param in query_params if param.name == 'user_id'), None)
         self.assertIsNotNone(user_id_param)
-        self.assertEqual(user_id_param.value, 'user1')
+        self.assertEqual(user_id_param.value, 'nonexistent_user')
 
 if __name__ == "__main__":
     unittest.main()
