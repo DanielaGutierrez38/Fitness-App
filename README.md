@@ -8,6 +8,7 @@
 - Kei Sanabria
 
 Deployed App Link: https://byte-me-44ac355vjq-uc.a.run.app/
+Newest version of deployed app link: https://byte-me-project-1-790220641143.us-central1.run.app
 
 # How to Run the Streamlit App
 
