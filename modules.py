@@ -382,3 +382,48 @@ def display_user_profile(user_id):
         except Exception as e:
             st.write("Unable to load activity data.")
             st.error(str(e))
+
+def friend_request_ui(user_id, friend_id):
+    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Friend Request Functionality (Kei) ===
+    """
+    Note: This function will call get_friend_data in data_fetcher.py to get the data of 
+    the friend and send/receive friend requests for it to be reflected in the database
+    """
+    pass
+
+def create_leaderboard_ui(user_id):
+    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Friends-Only Leaderboard UI (Ariana) ===
+    """
+    Note: This function will call get_leaderboard_data in data_fetcher.py to get the data of 
+    the user's rankings, scores, and relevant metrics (e.g., steps, calories, workouts). It also calls
+    leaderboard_scoring_logic to obtain the calculations for the scores.
+    """
+    pass
+
+def goal_creation_ui(user_id):
+    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Creation Interface (Darianne) ===
+    """
+    Note: This function will call save_goal in data_fetcher.py to save the data of 
+    the goal that the user submitted.
+
+    Hint: You can check if the goal is unrealistic by implementing an AI that you can check with
+    every time that the user submits a goal.
+    """
+    pass
+
+def goal_plan_display_ui(user_id, task_id):
+    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Plan Display UI (Kei) ===
+    """
+    Note: This function will call ai_call_for_planner in data_fetcher.py to show the data that
+    is returned in said function. It also calls mark_task to mark/unmark a task as completed and for
+    it to be reflected in the database.
+    """
+    pass
+
+def goal_progress_tracking_ui(user_id, task_id):
+    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Progress Tracking (Ariana) ===
+    """
+    Note: Calls get_progress_data in data_fetcher.py to make sure the 
+    user's progress data of the specific task_id is properly stored and retrieved from database.
+    """
+    pass

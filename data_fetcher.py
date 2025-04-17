@@ -327,5 +327,38 @@ def get_genai_advice(user_id):
 
     return {'advice_id': id, 'timestamp': advice_timestamp, 'content' : response.candidates[0].content.parts[0].text.strip(), 'image' : image}
 
+def get_friend_data(user_id, friend_id):
+    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Friend Request Functionality (Kei) ===
+    """
+    Note: This function will make sure that friend relationships are properly stored in the database
+    """
+    pass
 
-   
+def get_leaderboard_data(user_id):
+    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Friends-Only Leaderboard UI (Ariana) ===
+    """
+    Note: Get the data from the database for the user's rankings, scores, and relevant metrics (e.g., steps, calories, workouts).
+    """
+    pass
+
+def leaderboard_scoring_logic(user_id):
+    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Leaderboard Scoring Logic (Darianne) ===
+    pass
+
+def save_goal(user_id):
+    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Creation Interface (Darianne) ===
+    pass
+
+def ai_call_for_planner():
+    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test AI Integration for Goal Planning (Daniela) ===
+    # Make a comment letting know the AI request/response format for when someone uses this function, they understand the format
+    pass
+
+def mark_task(user_id, task_id):
+    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Plan Display UI (Kei) ===
+    # For users to mark/unmark activities as completed
+    pass
+
+def get_progress_data(user_id, task_id):
+    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Progress Tracking (Ariana) ===
+    pass

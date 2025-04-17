@@ -18,7 +18,7 @@ def display_app_page():
     """Displays the home page of the app."""
     st.title('Welcome to SDS!')
 
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(["Home", "GenAI Advice", "Activity Summary", "Recent Workouts", "Sensor Data", "Community", "Activity Page", "User Profile"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10 = st.tabs(["Home", "GenAI Advice", "Activity Summary", "Recent Workouts", "Sensor Data", "Community", "Activity Page", "User Profile", "Friends-Only Leaderboard", "Planner"])
     userId = None # Example data
 
     with tab1:
@@ -172,6 +172,24 @@ def display_app_page():
         # Display user profile
         userId = 'user1'  # You can use the current logged-in user's ID here
         display_user_profile(userId)  # Call the profile display function
+    
+    # Tab of Friends-Only Leaderboard
+    with tab9:
+        # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Friends-Only Leaderboard UI (Ariana) ===
+            # Call create_leaderboard_ui from modules.py 
+        # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Friend Request Functionality (Kei) ===
+            # Call friend_request_ui from modules.py
+        pass
+    
+    # Tab of AI Planner
+    with tab10:
+        # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Creation Interface (Darianne) ===
+            # Call goal_creation_ui from modules.py
+        # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Plan Display UI (Kei) ===
+            # Call goal_plan_display_ui from modules.py 
+        # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Progress Tracking (Ariana) ===
+            # Call goal_progress_tracking_ui from modules.py 
+        pass
 
         
 
