@@ -6,8 +6,8 @@
 #############################################################################
 
 import streamlit as st
-from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts, display_sensor_data, display_user_profile
-from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, add_post_to_database
+from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts, display_sensor_data, display_user_profile, friend_request_ui, create_leaderboard_ui, goal_creation_ui, goal_plan_display_ui, goal_progress_tracking_ui
+from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, add_post_to_database, get_friend_data, get_all_friends, get_leaderboard_data, leaderboard_scoring_logic, save_goal, ai_call_for_planner, mark_task, get_progress_data
 
 # New imports
 from datetime import datetime
