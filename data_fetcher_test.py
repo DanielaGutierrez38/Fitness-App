@@ -206,32 +206,71 @@ class TestDataFetcher(unittest.TestCase):
         mock_datetime_class.now.assert_called_once()
         mock_get_user_workouts.assert_called_once_with("test_user") 
 
-    @patch('data_fetcher.vertexai.init')
-    @patch('random.choice')
-    @patch('data_fetcher.datetime')  
+    @patch('data_fetcher.get_user_workouts')
     @patch('data_fetcher.GenerativeModel')
-    @patch('google.cloud.bigquery.Client')
-    def test_get_genai_advice_none_image(self,mock_bigquery_client, mock_generative_model, mock_datetime_module, mock_choice, mock_vertexai_init):
+    @patch('random.choice')
+    @patch('random.randint')
+    @patch('data_fetcher.datetime')
+    @patch('os.environ.get')
+    @patch('pytz.timezone')  # Mock pytz.timezone
+    def test_get_genai_advice_returns_correct_format(self, mock_pytz_timezone, mock_os_environ_get, mock_datetime, mock_randint, mock_choice, mock_generative_model, mock_get_user_workouts):
         from data_fetcher import get_genai_advice
 
-        mock_choice.return_value = None
+        # Mock environment variable
+        mock_os_environ_get.return_value = "test_project"
 
-        mock_datetime_class = MagicMock()
+        # Mock get_user_workouts to return a sample list
+        mock_get_user_workouts.return_value = [{"workout_id": 1, "name": "Running"}]
+
+        # Mock the GenerativeModel response
+        mock_response = MagicMock()
+        mock_candidate = MagicMock()
+        mock_content = MagicMock()
+        mock_part = MagicMock()
+        mock_part.text.strip.return_value = "You crushed your last run! Keep pushing!"
+        mock_content.parts = [mock_part]
+        mock_candidate.content = mock_content
+        mock_response.candidates = [mock_candidate]
+        mock_generative_model.return_value.generate_content.return_value = mock_response
+
+        # Mock random choice for image
+        mock_choice.return_value = 'https://example.com/image.jpg'
+
+        # Mock random integer for advice ID
+        mock_randint.return_value = 123
+
+        # Mock datetime.datetime.now
         mock_now = MagicMock()
-        mock_now.strftime.return_value = "2024-01-01 12:00:00 "
-        mock_datetime_class.now.return_value = mock_now
-        mock_datetime_module.datetime = mock_datetime_class  
+        mock_now.strftime.return_value = "2025-04-22 17:19:00 "
+        mock_datetime.datetime.now.return_value = mock_now
 
-        expected_message = "Keep going!"
-        mock_generative_model.return_value = MockGenerativeModel(expected_message)
-        mock_bigquery_client.return_value = MagicMock()
+        # Mock pytz.timezone to return a mock timezone object
+        mock_timezone_obj = MagicMock()
+        mock_pytz_timezone.return_value = mock_timezone_obj
+        mock_timezone_obj.localize.return_value = mock_now # Ensure localize returns the mock datetime
 
-        result = get_genai_advice("test_user")
-        self.assertEqual(result['image'], None)
-        self.assertEqual(result["content"], expected_message)
-        self.assertEqual(result['timestamp'], "2024-01-01 12:00:00 ")
-        mock_datetime_class.now.assert_called_once()
-        mock_vertexai_init.assert_called_once_with(project=None, location="us-central1")
+        # Call the function
+        advice = get_genai_advice("test_user")
+
+        # Assertions to check the format of the returned dictionary
+        self.assertIsInstance(advice, dict)
+        self.assertIn('advice_id', advice)
+        self.assertIn('timestamp', advice)
+        self.assertIn('content', advice)
+        self.assertIn('image', advice)
+        self.assertIsInstance(advice['advice_id'], int)
+        self.assertIsInstance(advice['timestamp'], str)
+        self.assertIsInstance(advice['content'], str)
+        self.assertIsInstance(advice['image'], (str, type(None)))
+        self.assertEqual(advice['content'], "You crushed your last run! Keep pushing!")
+        self.assertEqual(advice['image'], 'https://example.com/image.jpg')
+        self.assertEqual(advice['advice_id'], 123)
+        self.assertEqual(advice['timestamp'], "2025-04-22 17:19:00 ")
+
+        # Ensure get_user_workouts and generate_content were called
+        mock_get_user_workouts.assert_called_once_with("test_user")
+        mock_generative_model.return_value.generate_content.assert_called_once()
+        mock_pytz_timezone.assert_called_once_with('America/New_York')
 
 # Imports for get_user_posts testing
 import unittest
