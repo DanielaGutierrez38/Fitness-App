@@ -8,6 +8,7 @@
 # testing earlier units.
 #############################################################################
 
+import json
 import random
 from google.cloud import bigquery
 import os
@@ -335,11 +336,87 @@ def get_friend_data(user_id, friend_id):
     pass
 
 def get_leaderboard_data(user_id):
-    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Friends-Only Leaderboard UI (Ariana) ===
     """
-    Note: Get the data from the database for the user's rankings, scores, and relevant metrics (e.g., steps, calories, workouts).
+    Retrieves workout data for a given user and their friends
+    (based on the Friends table with UserId1 and UserId2 columns)
+    and structures it into a nested dictionary.
+
+    Args:
+        user_id (str): The UserId of the person you're interested in.
+
+    Returns:
+        dict: A dictionary where keys are UserIds (the initial user and their friends),
+              and values are dictionaries containing 'distance', 'steps', and 'calories'.
     """
-    pass
+    try:
+        client = bigquery.Client(project="keishlyanysanabriatechx25")
+        query = f"""
+            SELECT
+                u.Name,
+                w.UserId,
+                w.TotalDistance,
+                w.TotalSteps,
+                w.CaloriesBurned
+            FROM
+                `keishlyanysanabriatechx25.bytemeproject.Workouts` w
+            JOIN
+                `keishlyanysanabriatechx25.bytemeproject.Users` u ON w.UserId = u.UserId
+            WHERE w.UserId = '{user_id}'
+            UNION ALL
+            SELECT
+                u.Name,
+                w.UserId,
+                w.TotalDistance,
+                w.TotalSteps,
+                w.CaloriesBurned
+            FROM
+                `keishlyanysanabriatechx25.bytemeproject.Friends` f
+            JOIN
+                `keishlyanysanabriatechx25.bytemeproject.Workouts` w ON (f.UserId2 = w.UserId)
+            JOIN
+                `keishlyanysanabriatechx25.bytemeproject.Users` u ON w.UserId = u.UserId
+            WHERE f.UserId1 = '{user_id}'
+            UNION ALL
+            SELECT
+                u.Name,
+                w.UserId,
+                w.TotalDistance,
+                w.TotalSteps,
+                w.CaloriesBurned
+            FROM
+                `keishlyanysanabriatechx25.bytemeproject.Friends` f
+            JOIN
+                `keishlyanysanabriatechx25.bytemeproject.Workouts` w ON (f.UserId1 = w.UserId)
+            JOIN
+                `keishlyanysanabriatechx25.bytemeproject.Users` u ON w.UserId = u.UserId
+            WHERE f.UserId2 = '{user_id}'
+        """
+        query_job = client.query(query)
+        results = query_job.result()
+
+        workout_data = {}
+        for row in results:
+            user_id = row.UserId
+            name = row.Name
+            distance = row.TotalDistance
+            steps = row.TotalSteps
+            calories = row.CaloriesBurned
+
+            if user_id not in workout_data:
+                workout_data[user_id] = {}
+
+            workout_data[user_id] = {
+                'name': name,
+                'distance': distance,
+                'steps': steps,
+                'calories': calories
+            }
+
+        return workout_data
+
+    except Exception as e:
+        print(f"Error fetching BigQuery data: {e}")
+        return None
 
 def leaderboard_scoring_logic(user_id):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Leaderboard Scoring Logic (Darianne) ===
@@ -348,11 +425,38 @@ def leaderboard_scoring_logic(user_id):
 def save_goal(user_id):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Creation Interface (Darianne) ===
     pass
+    #return goal?
 
-def ai_call_for_planner():
+def ai_call_for_planner(prompt, num_days):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test AI Integration for Goal Planning (Daniela) ===
     # Make a comment letting know the AI request/response format for when someone uses this function, they understand the format
-    pass
+    #had to do this global vertexai variable to handle mocks in tests correctly
+    global _vertexai_initialized
+    load_dotenv()
+    if not _vertexai_initialized:
+        import vertexai
+        vertexai.init(project=os.environ.get("dagutierrez17techx25"), location="us-central1")
+        _vertexai_initialized = True
+
+    workouts = get_user_workouts('user1') #testing with user 1
+
+    model = GenerativeModel("gemini-1.5-flash-002")
+
+    system_instruction = ("You are a the main fitness trainer for a fitness app. You are getting information about the user's past workouts in the 'workouts' list of dictionaries")
+
+    #prompt = f"lose 10 pounds"
+    #num_days = f"in 30 days"
+
+    response = model.generate_content(f"""Based on the goal: '{prompt}' and your knowledge of the user's past workouts: {workouts}, please generate a {num_days}-day fitness plan. Return this plan as a Python dictionary where the keys are the day (e.g., 'Day 1', 'Day 2', ..., 'Day {num_days}') and the values are the recommended workout(s) for that day. Please provide specific exercises or types of activities. Take into consideration the user's past workouts to create a balanced and effective plan. The output should ONLY be a valid JSON dictionary, without any surrounding text or code blocks. Also please don't add line breaks""")
+
+    task_id = random.randint(1, 1000000) #create a random id for the advice
+
+    try:
+        plan_dictionary = json.loads(response.text)
+        return {'task_id': task_id, 'content': plan_dictionary}
+    except json.JSONDecodeError as e:
+        return {'task_id': task_id, 'content': f"Error: Could not parse the AI response as a JSON dictionary. Raw response: {response.text}. Error details: {e}"}
+    
 
 def mark_task(user_id, task_id):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Plan Display UI (Kei) ===
@@ -362,3 +466,11 @@ def mark_task(user_id, task_id):
 def get_progress_data(user_id, task_id):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Progress Tracking (Ariana) ===
     pass
+
+def get_all_friends():
+    pass
+
+dict_plan = ai_call_for_planner()
+for key, value in dict_plan['content'].items():
+    print(f"{key}: {value}")
+#print(dict_plan)
