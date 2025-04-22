@@ -494,6 +494,78 @@ def remove_friend(user_id, friend_username):
     client.query(delete_query, job_config=job_config_delete).result()
     return f"Friendship with {friend_username} has been removed."
 
+# Function created by ChatGPT: "create a function that checks the pending requests that the user_id currently has, it will be shown in an already created tab"
+def get_pending_requests(user_id):
+    """
+    Returns a list of usernames who have sent a friend request to the given user_id.
+    """
+    
+    query = """
+    SELECT U.Username AS SenderUsername, FR.RequesterId
+    FROM `keishlyanysanabriatechx25.bytemeproject.FriendRequests` FR
+    JOIN `keishlyanysanabriatechx25.bytemeproject.Users` U
+    ON FR.RequesterId = U.UserId
+    WHERE FR.ReceiverId = @user_id
+    ORDER BY FR.RequestedAt DESC
+    """
+
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("user_id", "STRING", user_id)
+        ]
+    )
+
+    results = client.query(query, job_config=job_config).result()
+
+    return [{"username": row["SenderUsername"], "user_id": row["RequesterId"]} for row in results]
+
+# Following 2 functions partially created by ChatGPT: "create the lines to accept and decline the friend requests. it should use the following functions to save/decline those friends: accept_friend_request"
+def accept_friend_request(current_user_id, requester_id):
+    # Add friendship in one direction only
+    insert_query = """
+    INSERT INTO `keishlyanysanabriatechx25.bytemeproject.Friends` (UserId1, UserId2)
+    VALUES (@user1, @user2)
+    """
+
+    insert_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("user1", "STRING", current_user_id),
+            bigquery.ScalarQueryParameter("user2", "STRING", requester_id),
+        ]
+    )
+
+    client.query(insert_query, job_config=insert_config).result()
+
+    # Remove the friend request
+    delete_query = """
+    DELETE FROM `keishlyanysanabriatechx25.bytemeproject.FriendRequests`
+    WHERE RequesterId = @requester_id AND ReceiverId = @receiver_id
+    """
+
+    delete_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("requester_id", "STRING", requester_id),
+            bigquery.ScalarQueryParameter("receiver_id", "STRING", current_user_id),
+        ]
+    )
+
+    client.query(delete_query, job_config=delete_config).result()
+
+def decline_friend_request(current_user_id, requester_id):
+    query = """
+    DELETE FROM `keishlyanysanabriatechx25.bytemeproject.FriendRequests`
+    WHERE RequesterId = @requester_id AND ReceiverId = @receiver_id
+    """
+
+    config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("requester_id", "STRING", requester_id),
+            bigquery.ScalarQueryParameter("receiver_id", "STRING", current_user_id),
+        ]
+    )
+
+    client.query(query, job_config=config).result()
+
 def get_leaderboard_data(user_id):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Friends-Only Leaderboard UI (Ariana) ===
     """
