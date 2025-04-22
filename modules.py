@@ -529,7 +529,7 @@ def goal_plan_display_ui(user_id):
             if f"completed_tasks_{task_id}" in st.session_state:
                 for key, completed in st.session_state[f"completed_tasks_{task_id}"].items():
                     day_from_key = key.split('_')[0] if '_' in key else "" # Extract day if possible
-                    mark_task_completed(user_id, task_id, day_from_key, completed)
+                    #mark_task_completed(user_id, task_id, day_from_key, completed)
 
         st.markdown("""
         <hr style="border:1px solid #ccc;">
