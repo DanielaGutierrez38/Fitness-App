@@ -463,26 +463,20 @@ def goal_plan_display_ui(user_id):
     is returned in said function. It also calls mark_task to mark/unmark a task as completed and for
     it to be reflected in the database.
     """
-    
-    '''
-    ai_response = ai_call_for_planner()
+    ai_response = ai_call_for_planner("lose 10 pounds", "in 30 days")
 
     if 'content' in ai_response and isinstance(ai_response['content'], dict):
         plan = ai_response['content']
         task_id = ai_response['task_id']
         st.markdown(f"<h2 style='font-size: 1.5em;'>Your Fitness Plan</h2>", unsafe_allow_html=True)
 
-        # Inject CSS to hide extra checkboxes at the top
-        st.markdown(
-            """
-            <style>
-            .st-emotion-cache div[data-testid="stMarkdownContainer"] > table > tbody:first-child > tr:first-child > td:first-child input[type="checkbox"] {
-                display: none;
-            }
-            </style>
-            """,
-            unsafe_allow_html=True,
-        )
+        # Google colors
+        google_blue = "#4285F4"
+        google_red = "#DB4437"
+        google_yellow = "#F4B400"
+        google_green = "#0F9D58"
+        colors = [google_blue, google_red, google_yellow, google_green]
+        color_index = 0
 
         completed_tasks = st.session_state.get(f"completed_tasks_{task_id}", {})
         table_data = []
@@ -494,33 +488,24 @@ def goal_plan_display_ui(user_id):
                     key = f"{task_id}_{day}_{i}"
                     completed = completed_tasks.get(key, False)
                     checkbox_id = f"checkbox_{key}"
-                    checkbox_html = f'<input type="checkbox" id="{checkbox_id}" {"checked" if completed else ""}>'
-                    label_html = f'<label for="{checkbox_id}">{activity}</label>'
-                    task_html = f"{checkbox_html} {label_html}"
-                    tasks_html_list.append(task_html)
-                    # Hidden Streamlit checkbox for state management
-                    is_completed = st.checkbox(f"{activity}", key=key, value=completed, label_visibility="hidden")
                     checked_attribute = "checked" if completed else ""
                     checkbox_html = f'<input type="checkbox" id="{checkbox_id}" {checked_attribute} onchange="handleCheckboxChange(\'{key}\')">'
                     label_html = f'<label for="{checkbox_id}">{activity}</label>'
-                    task_html = f"{checkbox_html} {label_html}"
+                    task_html = f"{checkbox_html} <span style='margin-left: 0.5em;'>{label_html}</span>" # Add spacing
                     tasks_html_list.append(task_html)
             else:
                 key = f"{task_id}_{day}"
                 completed = completed_tasks.get(key, False)
                 checkbox_id = f"checkbox_{key}"
-                checkbox_html = f'<input type="checkbox" id="{checkbox_id}" {"checked" if completed else ""}>'
+                checked_attribute = "checked" if completed else ""
+                checkbox_html = f'<input type="checkbox" id="{checkbox_id}" {checked_attribute} onchange="handleCheckboxChange(\'{key}\')">'
                 label_html = f'<label for="{checkbox_id}">{activities}</label>'
-                task_html = f"{checkbox_html} {label_html}"
+                task_html = f"{checkbox_html} <span style='margin-left: 0.5em;'>{label_html}</span>" # Add spacing
                 tasks_html_list.append(task_html)
-                is_completed = st.checkbox(f"{activities}", key=key, value=completed, label_visibility="hidden")
-                if is_completed != completed:
-                    completed_tasks[key] = is_completed
-                    mark_task_completed(user_id, task_id, day, is_completed)
 
-            table_data.append({'Day': day, 'Tasks': "<br>".join(tasks_html_list)})
-
-        st.session_state[f"completed_tasks_{task_id}"] = completed_tasks
+            table_data.append({'Day': f"<span style='color: {colors[color_index % len(colors)]}; font-weight: bold;'>{day}</span>",
+                               'Tasks': "<br>".join(tasks_html_list)})
+            color_index += 1
 
         if table_data:
             df = pd.DataFrame(table_data)
@@ -532,16 +517,31 @@ def goal_plan_display_ui(user_id):
             fetch('/_stcore/update_state', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ key: key, value: isChecked })
-            }).then(() => { location.reload(); });
+            body: JSON.stringify({ key: 'checkbox_' + key, value: isChecked })
+            }).then(() => {
+                // State is managed by Streamlit
+            });
             }
             </script>
             """, unsafe_allow_html=True)
 
+            # Call mark_task_completed based on session state
+            if f"completed_tasks_{task_id}" in st.session_state:
+                for key, completed in st.session_state[f"completed_tasks_{task_id}"].items():
+                    day_from_key = key.split('_')[0] if '_' in key else "" # Extract day if possible
+                    mark_task_completed(user_id, task_id, day_from_key, completed)
+
+        st.markdown("""
+        <hr style="border:1px solid #ccc;">
+        <p style="font-size: 0.8em; color: gray;">
+            <b>Disclaimer:</b> Please be aware that this fitness plan was generated by an AI and may not be perfectly tailored to your individual needs and health conditions. It is essential to consult with a doctor or qualified healthcare professional before starting any new fitness regimen to ensure it is safe and appropriate for you.
+        </p>
+        """, unsafe_allow_html=True)
+
     else:
         st.error("Failed to retrieve or process the fitness plan.")
         if 'content' in ai_response:
-            st.write(f"Raw AI Response: {ai_response['content']}")'''
+            st.write(f"Raw AI Response: {ai_response['content']}")
 
 def goal_progress_tracking_ui(user_id, task_id):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Progress Tracking (Ariana) ===
