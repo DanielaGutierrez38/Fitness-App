@@ -470,7 +470,7 @@ def get_progress_data(user_id, task_id):
 def get_all_friends():
     pass
 
-dict_plan = ai_call_for_planner()
+dict_plan = ai_call_for_planner("lose 10 pounds", "30 days")
 for key, value in dict_plan['content'].items():
     print(f"{key}: {value}")
 #print(dict_plan)
