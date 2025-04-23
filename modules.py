@@ -15,7 +15,8 @@ import matplotlib.pyplot as plt
 # Import for display_post
 import requests
 import base64
-from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_leaderboard_data, ai_call_for_planner
+from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friend_data, send_friend_request, remove_friend, get_leaderboard_data, leaderboard_scoring_logic, save_goal, ai_call_for_planner, mark_task, get_progress_data, get_pending_requests, accept_friend_request, decline_friend_request
+
 
 # Import for user_profile
 import datetime
@@ -274,6 +275,7 @@ def display_user_profile(user_id):
         #st.button("Add Friend")
         st.button("Edit Profile", key=f"edit_profile_{user_id}")
         st.button("Add Friend", key=f"add_friend_{user_id}")
+
     
     # User details in right column
     with col2:
@@ -385,13 +387,60 @@ def display_user_profile(user_id):
             st.write("Unable to load activity data.")
             st.error(str(e))
 
-def friend_request_ui(user_id, friend_id):
+def friend_request_ui(user_id):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Friend Request Functionality (Kei) ===
     """
     Note: This function will call get_friend_data in data_fetcher.py to get the data of 
     the friend and send/receive friend requests for it to be reflected in the database
     """
-    pass
+    st.header("Friend Network")
+    
+    # Create tabs for different friend-related functions
+    tab1, tab2 = st.tabs(["Search Users", "Pending Requests"])
+    
+    # Tab 1: Search for users to send friend requests
+    with tab1:
+        st.subheader("Find Friends")
+        friend_username = st.text_input("Search for users by username")
+        
+        if friend_username:
+            search_results = get_friend_data(user_id, friend_username)
+
+            st.write(search_results)
+
+            if search_results == f"You and '{friend_username}' are not friends yet.":
+                if st.button(f"Send Friend Request to {friend_username}"):
+                    send_friend_request(user_id, friend_username)
+                    st.success(f"Friend request sent to {friend_username}!")
+            elif search_results == f"You and '{friend_username}' are friends.":
+                if st.button(f"Remove Friend"):
+                    remove_friend(user_id, friend_username)
+                    st.success(f"Removed {friend_username} from your friends.")
+    
+    # Tab 2: Users can see their pending requests
+    with tab2:
+        st.subheader("Requests You've Received")
+        pending_requests = get_pending_requests(user_id)
+
+        if not pending_requests:
+            st.info("No pending friend requests.")
+        else:
+            for req in pending_requests:
+                with st.container():
+                    st.write(f"👤 {req['username']} sent you a friend request.")
+                    col1, col2 = st.columns([1, 1])
+
+                    with col1:
+                        if st.button(f"✅ Accept {req['username']}", key=f"accept_{req['user_id']}"):
+                            accept_friend_request(user_id, req['user_id'])
+                            st.success(f"You are now friends with {req['username']}!")
+                            st.rerun()
+
+                    with col2:
+                        if st.button(f"❌ Decline {req['username']}", key=f"decline_{req['user_id']}"):
+                            decline_friend_request(user_id, req['user_id'])
+                            st.info(f"Declined friend request from {req['username']}.")
+                            st.rerun()
 
 #created with help from gemini, asked it to create a leaderboard table based on leaderboard_data and to then also add the
 #friend's profile functionality

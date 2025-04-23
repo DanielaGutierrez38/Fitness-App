@@ -55,6 +55,8 @@ users = {
 }
 
 
+client = bigquery.Client()
+
 #asked Gemini for help on how to write the query since it needed a lot of parameters
 def get_user_sensor_data(user_id, workout_id):
 
@@ -328,12 +330,242 @@ def get_genai_advice(user_id):
 
     return {'advice_id': id, 'timestamp': advice_timestamp, 'content' : response.candidates[0].content.parts[0].text.strip(), 'image' : image}
 
-def get_friend_data(user_id, friend_id):
-    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Friend Request Functionality (Kei) ===
+# Created by ChatGPT to "make a function that checks if the username is a friend of user_id and if that friend exists in the database"
+def get_friend_data(user_id, friend_username):
     """
-    Note: This function will make sure that friend relationships are properly stored in the database
+    Checks if the username exists, and if it's a valid friend (not yourself),
+    determines if the two users are friends.
     """
-    pass
+
+    # Step 1: Look up UserId of friend_username
+    get_friend_id_query = """
+    SELECT UserId FROM `keishlyanysanabriatechx25.bytemeproject.Users`
+    WHERE Username = @friend_username
+    """
+    job_config_lookup = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("friend_username", "STRING", friend_username),
+        ]
+    )
+
+    result = client.query(get_friend_id_query, job_config=job_config_lookup).result()
+    rows = list(result)
+
+    if not rows:
+        return f"Username '{friend_username}' does not exist."
+
+    friend_id = rows[0]["UserId"]
+
+    # Step 2: Check for self
+    if user_id == friend_id:
+        return "You cannot add yourself as a friend."
+
+    # Step 3: Check if the users are already friends
+    check_friend_query = """
+    SELECT * FROM `keishlyanysanabriatechx25.bytemeproject.Friends`
+    WHERE (UserId1 = @user_id AND UserId2 = @friend_id)
+       OR (UserId1 = @friend_id AND UserId2 = @user_id)
+    """
+    job_config_check = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("user_id", "STRING", user_id),
+            bigquery.ScalarQueryParameter("friend_id", "STRING", friend_id),
+        ]
+    )
+
+    friendship_result = client.query(check_friend_query, job_config=job_config_check).result()
+
+    if friendship_result.total_rows > 0:
+        return f"You and '{friend_username}' are friends."
+    else:
+        return f"You and '{friend_username}' are not friends yet."
+
+# Function mostly made by ChatGPT: "Following the database structure, create a function that lets the user send a friend request"
+def send_friend_request(user_id, friend_username):
+    """
+    Sends a friend request from user_id to the user with friend_username.
+    """
+
+    # Step 1: Resolve friend_username to friend_id
+    get_friend_id_query = """
+    SELECT UserId FROM `keishlyanysanabriatechx25.bytemeproject.Users`
+    WHERE Username = @friend_username
+    """
+    job_config_lookup = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("friend_username", "STRING", friend_username),
+        ]
+    )
+
+    result = client.query(get_friend_id_query, job_config=job_config_lookup).result()
+    rows = list(result)
+
+    if not rows:
+        return f"Username '{friend_username}' does not exist."
+
+    friend_id = rows[0]["UserId"]
+
+    # Step 2: Prevent sending to self
+    if friend_id == user_id:
+        return "You cannot send a friend request to yourself."
+
+    # Step 3: Check if they're already friends
+    check_friend_query = """
+    SELECT * FROM `keishlyanysanabriatechx25.bytemeproject.Friends`
+    WHERE (UserId1 = @user_id AND UserId2 = @friend_id)
+       OR (UserId1 = @friend_id AND UserId2 = @user_id)
+    """
+    job_config_check = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("user_id", "STRING", user_id),
+            bigquery.ScalarQueryParameter("friend_id", "STRING", friend_id),
+        ]
+    )
+
+    if client.query(check_friend_query, job_config=job_config_check).result().total_rows > 0:
+        return f"You are already friends with {friend_username}."
+
+    # Step 4: Check if a request already exists
+    check_request_query = """
+    SELECT * FROM `keishlyanysanabriatechx25.bytemeproject.FriendRequests`
+    WHERE (RequesterId = @user_id AND ReceiverId = @friend_id)
+       OR (RequesterId = @friend_id AND ReceiverId = @user_id)
+    """
+    job_config_request_check = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("user_id", "STRING", user_id),
+            bigquery.ScalarQueryParameter("friend_id", "STRING", friend_id),
+        ]
+    )
+
+    if client.query(check_request_query, job_config=job_config_request_check).result().total_rows > 0:
+        return f"A friend request is already pending between you and {friend_username}."
+
+    # Step 5: Insert the friend request
+    insert_request_query = """
+    INSERT INTO `keishlyanysanabriatechx25.bytemeproject.FriendRequests` (RequesterId, ReceiverId, RequestedAt)
+    VALUES (@user_id, @friend_id, CURRENT_TIMESTAMP())
+    """
+    job_config_insert = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("user_id", "STRING", user_id),
+            bigquery.ScalarQueryParameter("friend_id", "STRING", friend_id),
+        ]
+    )
+
+    client.query(insert_request_query, job_config=job_config_insert).result()
+    return f"Friend request sent to {friend_username}!"
+
+# Function mostly made by ChatGPT: "Following the database structure, create a function that lets the user remove a friend"
+def remove_friend(user_id, friend_username):
+    """
+    Removes the friend relationship between user_id and friend_username.
+    First resolves friend_username to UserId, then deletes the friendship if it exists.
+    """
+
+    # Resolve Username to UserId
+    get_friend_id_query = """
+    SELECT UserId FROM `keishlyanysanabriatechx25.bytemeproject.Users`
+    WHERE Username = @friend_username
+    """
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("friend_username", "STRING", friend_username),
+        ]
+    )
+
+    result = client.query(get_friend_id_query, job_config=job_config).result()
+    rows = list(result)
+
+    friend_id = rows[0]["UserId"]
+
+    # Delete the friendship
+    delete_query = """
+    DELETE FROM `keishlyanysanabriatechx25.bytemeproject.Friends`
+    WHERE (UserId1 = @user_id AND UserId2 = @friend_id)
+       OR (UserId1 = @friend_id AND UserId2 = @user_id)
+    """
+    job_config_delete = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("user_id", "STRING", user_id),
+            bigquery.ScalarQueryParameter("friend_id", "STRING", friend_id),
+        ]
+    )
+
+    client.query(delete_query, job_config=job_config_delete).result()
+    return f"Friendship with {friend_username} has been removed."
+
+# Function created by ChatGPT: "create a function that checks the pending requests that the user_id currently has, it will be shown in an already created tab"
+def get_pending_requests(user_id):
+    """
+    Returns a list of usernames who have sent a friend request to the given user_id.
+    """
+    
+    query = """
+    SELECT U.Username AS SenderUsername, FR.RequesterId
+    FROM `keishlyanysanabriatechx25.bytemeproject.FriendRequests` FR
+    JOIN `keishlyanysanabriatechx25.bytemeproject.Users` U
+    ON FR.RequesterId = U.UserId
+    WHERE FR.ReceiverId = @user_id
+    ORDER BY FR.RequestedAt DESC
+    """
+
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("user_id", "STRING", user_id)
+        ]
+    )
+
+    results = client.query(query, job_config=job_config).result()
+
+    return [{"username": row["SenderUsername"], "user_id": row["RequesterId"]} for row in results]
+
+# Following 2 functions partially created by ChatGPT: "create the lines to accept and decline the friend requests. it should use the following functions to save/decline those friends: accept_friend_request"
+def accept_friend_request(current_user_id, requester_id):
+    # Add friendship in one direction only
+    insert_query = """
+    INSERT INTO `keishlyanysanabriatechx25.bytemeproject.Friends` (UserId1, UserId2)
+    VALUES (@user1, @user2)
+    """
+
+    insert_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("user1", "STRING", current_user_id),
+            bigquery.ScalarQueryParameter("user2", "STRING", requester_id),
+        ]
+    )
+
+    client.query(insert_query, job_config=insert_config).result()
+
+    # Remove the friend request
+    delete_query = """
+    DELETE FROM `keishlyanysanabriatechx25.bytemeproject.FriendRequests`
+    WHERE RequesterId = @requester_id AND ReceiverId = @receiver_id
+    """
+
+    delete_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("requester_id", "STRING", requester_id),
+            bigquery.ScalarQueryParameter("receiver_id", "STRING", current_user_id),
+        ]
+    )
+
+    client.query(delete_query, job_config=delete_config).result()
+
+def decline_friend_request(current_user_id, requester_id):
+    query = """
+    DELETE FROM `keishlyanysanabriatechx25.bytemeproject.FriendRequests`
+    WHERE RequesterId = @requester_id AND ReceiverId = @receiver_id
+    """
+
+    config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("requester_id", "STRING", requester_id),
+            bigquery.ScalarQueryParameter("receiver_id", "STRING", current_user_id),
+        ]
+    )
+
+    client.query(query, job_config=config).result()
 
 #the query was generated by gemini. i described the tables to it and then i asked it to create the query so that it returns the friend's workout data
 def get_leaderboard_data(user_id):
