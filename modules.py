@@ -270,8 +270,10 @@ def display_user_profile(user_id):
         st.write(f"**@{user_profile['username']}**")
         
         # Add buttons for actions
-        st.button("Edit Profile")
-        st.button("Add Friend")
+        #st.button("Edit Profile")
+        #st.button("Add Friend")
+        st.button("Edit Profile", key=f"edit_profile_{user_id}")
+        st.button("Add Friend", key=f"add_friend_{user_id}")
     
     # User details in right column
     with col2:
@@ -391,13 +393,9 @@ def friend_request_ui(user_id, friend_id):
     """
     pass
 
+#created with help from gemini, asked it to create a leaderboard table based on leaderboard_data and to then also add the
+#friend's profile functionality
 def create_leaderboard_ui(user_id):
-    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Friends-Only Leaderboard UI (Ariana) ===
-    """
-    Note: This function will call get_leaderboard_data in data_fetcher.py to get the data of 
-    the user's rankings, scores, and relevant metrics (e.g., steps, calories, workouts). It also calls
-    leaderboard_scoring_logic to obtain the calculations for the scores.
-    """
     st.title("Friends Leaderboard")
     st.write("Select the metric you want to see the leaderboard based on:")
 
@@ -407,18 +405,17 @@ def create_leaderboard_ui(user_id):
         st.warning("No workout data found for you or your friends.")
         return
 
-    # Convert the dictionary to a Pandas DataFrame
     df_leaderboard = pd.DataFrame.from_dict(leaderboard_data, orient='index')
     df_leaderboard.index.name = 'UserId'
     df_leaderboard = df_leaderboard.reset_index()
 
-    # Rename the 'name' column to 'Name' for better display
-    df_leaderboard = df_leaderboard.rename(columns={'name': 'Name'})
+    def get_full_name(uid):
+        profile = get_user_profile(uid)
+        return profile.get('full_name', 'Unknown')
 
-    sort_option = st.radio(
-        "Sort by:",
-        ('Calories Burned', 'Total Steps', 'Total Distance')
-    )
+    df_leaderboard['Name'] = df_leaderboard['UserId'].apply(get_full_name)
+
+    sort_option = st.radio("Sort by:", ('Calories Burned', 'Total Steps', 'Total Distance'))
 
     if sort_option == 'Calories Burned':
         sort_by = 'calories'
@@ -436,14 +433,30 @@ def create_leaderboard_ui(user_id):
         columns_to_display = ['Name', 'distance']
         column_renaming = {'distance': 'Total Distance'}
     else:
-        return  # Should not happen due to the radio buttons
+        return
 
-    # Sort the DataFrame
     sorted_leaderboard = df_leaderboard.sort_values(by=sort_by, ascending=False).reset_index(drop=True)
-    sorted_leaderboard.index = sorted_leaderboard.index + 1  # Start index from 1
+    sorted_leaderboard.index = sorted_leaderboard.index + 1
 
     st.subheader(f"Leaderboard by {display_name}")
     st.table(sorted_leaderboard[columns_to_display].rename(columns=column_renaming))
+
+    # Profile viewing logic - no automatic calls
+    selected_user_id = st.selectbox(
+        "Select a friend to view their profile:",
+        sorted_leaderboard['UserId'],
+        format_func=get_full_name
+    )
+
+    #Prevent profile from rendering automatically:
+    if st.button(f"View Profile of {get_full_name(selected_user_id)}", key=f"view_profile_{selected_user_id}"):
+        # Use st.session_state to remember the selection
+        st.session_state['selected_profile_to_display'] = selected_user_id
+
+    #Only display the profile if the user has explicitly clicked the button
+    if 'selected_profile_to_display' in st.session_state:
+        st.markdown("---")
+        display_user_profile(st.session_state['selected_profile_to_display'])
 
 def goal_creation_ui(user_id):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Creation Interface (Darianne) ===
@@ -463,7 +476,8 @@ def goal_plan_display_ui(user_id):
     is returned in said function. It also calls mark_task to mark/unmark a task as completed and for
     it to be reflected in the database.
     """
-    ai_response = ai_call_for_planner("lose 10 pounds", "in 30 days")
+    #goal = save_goal(user_id)
+    ai_response = ai_call_for_planner(user_id)
 
     if 'content' in ai_response and isinstance(ai_response['content'], dict):
         plan = ai_response['content']
