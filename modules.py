@@ -17,6 +17,7 @@ import requests
 import base64
 from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friend_data, send_friend_request, remove_friend, get_leaderboard_data, leaderboard_scoring_logic, save_goal, ai_call_for_planner, mark_task, get_progress_data, get_pending_requests, accept_friend_request, decline_friend_request
 
+
 # Import for user_profile
 import datetime
 from google.cloud import bigquery
@@ -270,7 +271,11 @@ def display_user_profile(user_id):
         st.write(f"**@{user_profile['username']}**")
         
         # Add buttons for actions
-        st.button("Edit Profile")
+        #st.button("Edit Profile")
+        #st.button("Add Friend")
+        st.button("Edit Profile", key=f"edit_profile_{user_id}")
+        st.button("Add Friend", key=f"add_friend_{user_id}")
+
     
     # User details in right column
     with col2:
@@ -437,14 +442,70 @@ def friend_request_ui(user_id):
                             st.info(f"Declined friend request from {req['username']}.")
                             st.rerun()
 
+#created with help from gemini, asked it to create a leaderboard table based on leaderboard_data and to then also add the
+#friend's profile functionality
 def create_leaderboard_ui(user_id):
-    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Friends-Only Leaderboard UI (Ariana) ===
-    """
-    Note: This function will call get_leaderboard_data in data_fetcher.py to get the data of 
-    the user's rankings, scores, and relevant metrics (e.g., steps, calories, workouts). It also calls
-    leaderboard_scoring_logic to obtain the calculations for the scores.
-    """
-    pass
+    st.title("Friends Leaderboard")
+    st.write("Select the metric you want to see the leaderboard based on:")
+
+    leaderboard_data = get_leaderboard_data(user_id)
+
+    if not leaderboard_data:
+        st.warning("No workout data found for you or your friends.")
+        return
+
+    df_leaderboard = pd.DataFrame.from_dict(leaderboard_data, orient='index')
+    df_leaderboard.index.name = 'UserId'
+    df_leaderboard = df_leaderboard.reset_index()
+
+    def get_full_name(uid):
+        profile = get_user_profile(uid)
+        return profile.get('full_name', 'Unknown')
+
+    df_leaderboard['Name'] = df_leaderboard['UserId'].apply(get_full_name)
+
+    sort_option = st.radio("Sort by:", ('Calories Burned', 'Total Steps', 'Total Distance'))
+
+    if sort_option == 'Calories Burned':
+        sort_by = 'calories'
+        display_name = 'Calories Burned'
+        columns_to_display = ['Name', 'calories']
+        column_renaming = {'calories': 'Calories Burned'}
+    elif sort_option == 'Total Steps':
+        sort_by = 'steps'
+        display_name = 'Total Steps'
+        columns_to_display = ['Name', 'steps']
+        column_renaming = {'steps': 'Total Steps'}
+    elif sort_option == 'Total Distance':
+        sort_by = 'distance'
+        display_name = 'Total Distance'
+        columns_to_display = ['Name', 'distance']
+        column_renaming = {'distance': 'Total Distance'}
+    else:
+        return
+
+    sorted_leaderboard = df_leaderboard.sort_values(by=sort_by, ascending=False).reset_index(drop=True)
+    sorted_leaderboard.index = sorted_leaderboard.index + 1
+
+    st.subheader(f"Leaderboard by {display_name}")
+    st.table(sorted_leaderboard[columns_to_display].rename(columns=column_renaming))
+
+    # Profile viewing logic - no automatic calls
+    selected_user_id = st.selectbox(
+        "Select a friend to view their profile:",
+        sorted_leaderboard['UserId'],
+        format_func=get_full_name
+    )
+
+    #Prevent profile from rendering automatically:
+    if st.button(f"View Profile of {get_full_name(selected_user_id)}", key=f"view_profile_{selected_user_id}"):
+        # Use st.session_state to remember the selection
+        st.session_state['selected_profile_to_display'] = selected_user_id
+
+    #Only display the profile if the user has explicitly clicked the button
+    if 'selected_profile_to_display' in st.session_state:
+        st.markdown("---")
+        display_user_profile(st.session_state['selected_profile_to_display'])
 
 def goal_creation_ui(user_id):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Creation Interface (Darianne) ===
@@ -457,14 +518,93 @@ def goal_creation_ui(user_id):
     """
     pass
 
-def goal_plan_display_ui(user_id, task_id):
+def goal_plan_display_ui(user_id):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Plan Display UI (Kei) ===
     """
     Note: This function will call ai_call_for_planner in data_fetcher.py to show the data that
     is returned in said function. It also calls mark_task to mark/unmark a task as completed and for
     it to be reflected in the database.
     """
-    pass
+    #goal = save_goal(user_id)
+    ai_response = ai_call_for_planner(user_id)
+
+    if 'content' in ai_response and isinstance(ai_response['content'], dict):
+        plan = ai_response['content']
+        task_id = ai_response['task_id']
+        st.markdown(f"<h2 style='font-size: 1.5em;'>Your Fitness Plan</h2>", unsafe_allow_html=True)
+
+        # Google colors
+        google_blue = "#4285F4"
+        google_red = "#DB4437"
+        google_yellow = "#F4B400"
+        google_green = "#0F9D58"
+        colors = [google_blue, google_red, google_yellow, google_green]
+        color_index = 0
+
+        completed_tasks = st.session_state.get(f"completed_tasks_{task_id}", {})
+        table_data = []
+
+        for day, activities in plan.items():
+            tasks_html_list = []
+            if isinstance(activities, list):
+                for i, activity in enumerate(activities):
+                    key = f"{task_id}_{day}_{i}"
+                    completed = completed_tasks.get(key, False)
+                    checkbox_id = f"checkbox_{key}"
+                    checked_attribute = "checked" if completed else ""
+                    checkbox_html = f'<input type="checkbox" id="{checkbox_id}" {checked_attribute} onchange="handleCheckboxChange(\'{key}\')">'
+                    label_html = f'<label for="{checkbox_id}">{activity}</label>'
+                    task_html = f"{checkbox_html} <span style='margin-left: 0.5em;'>{label_html}</span>" # Add spacing
+                    tasks_html_list.append(task_html)
+            else:
+                key = f"{task_id}_{day}"
+                completed = completed_tasks.get(key, False)
+                checkbox_id = f"checkbox_{key}"
+                checked_attribute = "checked" if completed else ""
+                checkbox_html = f'<input type="checkbox" id="{checkbox_id}" {checked_attribute} onchange="handleCheckboxChange(\'{key}\')">'
+                label_html = f'<label for="{checkbox_id}">{activities}</label>'
+                task_html = f"{checkbox_html} <span style='margin-left: 0.5em;'>{label_html}</span>" # Add spacing
+                tasks_html_list.append(task_html)
+
+            table_data.append({'Day': f"<span style='color: {colors[color_index % len(colors)]}; font-weight: bold;'>{day}</span>",
+                               'Tasks': "<br>".join(tasks_html_list)})
+            color_index += 1
+
+        if table_data:
+            df = pd.DataFrame(table_data)
+            st.markdown(df.to_html(index=False, escape=False), unsafe_allow_html=True)
+            st.markdown("""
+            <script>
+            function handleCheckboxChange(key) {
+            const isChecked = document.getElementById('checkbox_' + key).checked;
+            fetch('/_stcore/update_state', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: 'checkbox_' + key, value: isChecked })
+            }).then(() => {
+                // State is managed by Streamlit
+            });
+            }
+            </script>
+            """, unsafe_allow_html=True)
+
+            # Call mark_task_completed based on session state
+            if f"completed_tasks_{task_id}" in st.session_state:
+                for key, completed in st.session_state[f"completed_tasks_{task_id}"].items():
+                    day_from_key = key.split('_')[0] if '_' in key else "" # Extract day if possible
+                    #mark_task_completed(user_id, task_id, day_from_key, completed)
+
+        st.markdown("""
+        <hr style="border:1px solid #ccc;">
+        <p style="font-size: 0.8em; color: gray;">
+            <b>Disclaimer:</b> Please be aware that this fitness plan was generated by an AI and may not be perfectly tailored to your individual needs and health conditions. It is essential to consult with a doctor or qualified healthcare professional before starting any new fitness regimen to ensure it is safe and appropriate for you.
+        </p>
+        """, unsafe_allow_html=True)
+
+    else:
+        st.error("Failed to retrieve or process the fitness plan.")
+        if 'content' in ai_response:
+            st.write(f"Raw AI Response: {ai_response['content']}")
 
 def goal_progress_tracking_ui(user_id, task_id):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Progress Tracking (Ariana) ===

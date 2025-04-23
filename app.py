@@ -178,6 +178,8 @@ def display_app_page():
         userId = 'user1'  # You can use the current logged-in user's ID here
         # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Friends-Only Leaderboard UI (Ariana) ===
             # Call create_leaderboard_ui from modules.py 
+        user_id = 'user1'
+        create_leaderboard_ui(user_id)
         # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Friend Request Functionality (Kei) ===
             # Call friend_request_ui from modules.py
         friend_request_ui(userId)
@@ -188,6 +190,8 @@ def display_app_page():
             # Call goal_creation_ui from modules.py
         # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Plan Display UI (Kei) ===
             # Call goal_plan_display_ui from modules.py 
+        user_id = 'user1'
+        goal_plan_display_ui(user_id)
         # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Progress Tracking (Ariana) ===
             # Call goal_progress_tracking_ui from modules.py 
         pass
