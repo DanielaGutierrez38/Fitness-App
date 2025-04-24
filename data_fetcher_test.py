@@ -173,7 +173,15 @@ class TestDataFetcher(unittest.TestCase):
     @patch('data_fetcher.get_user_workouts')
     # @patch('data_fetcher.get_ai_advice')
     @patch("data_fetcher.bigquery.Client")
-    def test_get_genai_advice_success(self, mock_get_user_workouts, mock_generative_model, mock_datetime_module, mock_randint, mock_choice, mock_os_environ_get, mock_vertexai_init):
+    def test_get_genai_advice_success(self,
+                                  mock_bigquery_client,
+                                  mock_get_user_workouts,
+                                  mock_generative_model,
+                                  mock_datetime_module,
+                                  mock_randint,
+                                  mock_choice,
+                                  mock_os_environ_get,
+                                  mock_vertexai_init):
         from data_fetcher import get_genai_advice
 
         mock_os_environ_get.side_effect = lambda key, default=None: {
