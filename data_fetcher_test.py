@@ -1,39 +1,39 @@
-#############################################################################
-# data_fetcher_test.py
-#
-# This file contains tests for data_fetcher.py.
-#
-# You will write these tests in Unit 3.
-#############################################################################
-import unittest
-import json
-from unittest.mock import patch, MagicMock
-from google.cloud import bigquery
-import os
-import datetime
-import pytz
-import sys
-from data_fetcher import get_user_sensor_data, get_genai_advice, load_dotenv, vertexai, get_user_profile, ai_call_for_planner
-from vertexai.generative_models import GenerativeModel
-from data_fetcher import _vertexai_initialized
-from dotenv import load_dotenv
+# #############################################################################
+# # data_fetcher_test.py
+# #
+# # This file contains tests for data_fetcher.py.
+# #
+# # You will write these tests in Unit 3.
+# #############################################################################
+# import unittest
+# import json
+# from unittest.mock import patch, MagicMock
+# from google.cloud import bigquery
+# import os
+# import datetime
+# import pytz
+# import sys
+# from data_fetcher import get_user_sensor_data, get_genai_advice, load_dotenv, vertexai, get_user_profile, ai_call_for_planner
+# from vertexai.generative_models import GenerativeModel
+# from data_fetcher import _vertexai_initialized
+# from dotenv import load_dotenv
 
-class MockGenerativeModel: #mock the GenAI model
-    def __init__(self, expected_message, *args, **kwargs):
-        self.expected_message = expected_message
+# class MockGenerativeModel: #mock the GenAI model
+#     def __init__(self, expected_message, *args, **kwargs):
+#         self.expected_message = expected_message
 
-    def generate_content(self, *args, **kwargs): #mock a response from the model
-        mock_response = MagicMock()
-        mock_response.candidates = [MagicMock()]
-        mock_response.candidates[0].content.parts = [MagicMock()]
-        mock_response.candidates[0].content.parts[0].text.strip.return_value = self.expected_message
-        return mock_response
+#     def generate_content(self, *args, **kwargs): #mock a response from the model
+#         mock_response = MagicMock()
+#         mock_response.candidates = [MagicMock()]
+#         mock_response.candidates[0].content.parts = [MagicMock()]
+#         mock_response.candidates[0].content.parts[0].text.strip.return_value = self.expected_message
+#         return mock_response
 
-class TestDataFetcher(unittest.TestCase):
+# class TestDataFetcher(unittest.TestCase):
 
-    def setUp(self): 
-        global _vertexai_initialized
-        _vertexai_initialized = False
+#     def setUp(self): 
+#         global _vertexai_initialized
+#         _vertexai_initialized = False
 
 #     """Tests for get_user_sensor_data_success, these tests were created with help from Gemini"""
 #     @patch('google.cloud.bigquery.Client')
