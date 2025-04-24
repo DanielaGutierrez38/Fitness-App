@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 # Import for display_post
 import requests
 import base64
-from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friend_data, send_friend_request, remove_friend, get_leaderboard_data, leaderboard_scoring_logic, save_goal, ai_call_for_planner, mark_task, get_progress_data, save_plan
+from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friend_data, send_friend_request, remove_friend, get_leaderboard_data, leaderboard_scoring_logic, save_goal, ai_call_for_planner, mark_task, get_progress_data, get_pending_requests, accept_friend_request, decline_friend_request, save_plan
 
 # Import for user_profile
 import datetime
@@ -271,6 +271,7 @@ def display_user_profile(user_id):
         
         # Add buttons for actions
         st.button("Edit Profile", key=f"edit_profile_{user_id}")
+        st.button("Add Friend", key=f"add_friend_{user_id}")
 
     
     # User details in right column
@@ -412,157 +413,31 @@ def friend_request_ui(user_id):
                 if st.button(f"Remove Friend"):
                     remove_friend(user_id, friend_username)
                     st.success(f"Removed {friend_username} from your friends.")
+    
+    # Tab 2: Users can see their pending requests
+    with tab2:
+        st.subheader("Requests You've Received")
+        pending_requests = get_pending_requests(user_id)
 
-            
-    #         if search_results and len(search_results) > 0:
-    #             st.write(f"Found {len(search_results)} users")
-                
-    #             for result in search_results:
-    #                 col1, col2 = st.columns([3, 1])
-                    
-    #                 with col1:
-    #                     st.write(f"**{result['username']}** ({result['display_name']})")
-                    
-    #                 with col2:
-    #                     # Check if this user is already a friend or has a pending request
-    #                     friendship_status = get_friend_data(user_id, result['user_id'])
-                        
-    #                     # Show appropriate button based on relationship status
-    #                     if not friendship_status:
-    #                         if st.button(f"Add Friend", key=f"add_{result['user_id']}"):
-    #                             # Send friend request
-    #                             save_friend_data(user_id, result['user_id'], action='send_request')
-    #                             st.success(f"Friend request sent to {result['username']}!")
-    #                             st.rerun()
-                        
-    #                     elif friendship_status.get('status') == 'pending_sent':
-    #                         st.info("Request Sent")
-    #                         if st.button("Cancel", key=f"cancel_{result['user_id']}"):
-    #                             save_friend_data(user_id, result['user_id'], action='cancel_request')
-    #                             st.success("Request canceled")
-    #                             st.rerun()
-                            
-    #                     elif friendship_status.get('status') == 'pending_received':
-    #                         accept_col, reject_col = st.columns(2)
-    #                         with accept_col:
-    #                             if st.button("Accept", key=f"accept_{result['user_id']}"):
-    #                                 save_friend_data(user_id, result['user_id'], action='accept_request')
-    #                                 st.success(f"You are now friends with {result['username']}!")
-    #                                 st.rerun()
-                            
-    #                         with reject_col:
-    #                             if st.button("Reject", key=f"reject_{result['user_id']}"):
-    #                                 save_friend_data(user_id, result['user_id'], action='reject_request')
-    #                                 st.success(f"Friend request rejected.")
-    #                                 st.rerun()
-                                        
-    #                     elif friendship_status.get('status') == 'friends':
-    #                         st.success("Friends")
-    #                         if st.button("Remove", key=f"remove_{result['user_id']}"):
-    #                             save_friend_data(user_id, result['user_id'], action='remove_friend')
-    #                             st.success(f"Removed {result['username']} from your friends.")
-    #                             st.rerun()
-    #         else:
-    #             st.info("No users found matching your search query.")
-    
-    # # Tab 2: Pending Friend Requests
-    # with tab2:
-    #     st.subheader("Pending Friend Requests")
-        
-    #     # Get all friends and filter by status
-    #     all_friendships = get_all_friends(user_id)
-        
-    #     # Filter incoming and outgoing requests
-    #     incoming_requests = [f for f in all_friendships if f.get('status') == 'pending_received']
-    #     outgoing_requests = [f for f in all_friendships if f.get('status') == 'pending_sent']
-        
-    #     # Display incoming requests
-    #     if incoming_requests:
-    #         st.markdown("### Requests Received")
-    #         for request in incoming_requests:
-    #             col1, col2, col3 = st.columns([3, 1, 1])
-                
-    #             with col1:
-    #                 st.write(f"**{request['username']}** ({request['display_name']})")
-                
-    #             with col2:
-    #                 if st.button("Accept", key=f"accept_tab_{request['user_id']}"):
-    #                     save_friend_data(user_id, request['user_id'], action='accept_request')
-    #                     st.success(f"You are now friends with {request['username']}!")
-    #                     st.rerun()
-                
-    #             with col3:
-    #                 if st.button("Reject", key=f"reject_tab_{request['user_id']}"):
-    #                     save_friend_data(user_id, request['user_id'], action='reject_request')
-    #                     st.success(f"Friend request rejected.")
-    #                     st.rerun()
-    #     else:
-    #         st.info("No pending friend requests received.")
-        
-    #     # Display outgoing requests
-    #     if outgoing_requests:
-    #         st.markdown("### Requests Sent")
-    #         for request in outgoing_requests:
-    #             col1, col2 = st.columns([4, 1])
-                
-    #             with col1:
-    #                 st.write(f"**{request['username']}** ({request['display_name']})")
-                
-    #             with col2:
-    #                 if st.button("Cancel", key=f"cancel_{request['user_id']}"):
-    #                     save_friend_data(user_id, request['user_id'], action='cancel_request')
-    #                     st.success(f"Friend request canceled.")
-    #                     st.rerun()
-    #     else:
-    #         st.info("No pending friend requests sent.")
-    
-    # # If a specific friend_username was provided, show their profile directly
-    # if friend_username:
-    #     st.sidebar.header("Friend Profile")
-        
-    #     # Get friend data including username, display name, etc.
-    #     friend_info = get_user_info(friend_username)  # This would be a separate function to get user profile info
-    #     friendship_status = get_friend_data(user_id, friend_username)
-        
-    #     if friend_info:
-    #         st.sidebar.subheader(f"{friend_info['username']} ({friend_info['display_name']})")
-            
-    #         # Show relationship status and appropriate actions
-    #         status = friendship_status.get('status') if friendship_status else 'none'
-            
-    #         if status == 'none':
-    #             if st.sidebar.button("Add Friend"):
-    #                 save_friend_data(user_id, friend_username, action='send_request')
-    #                 st.sidebar.success(f"Friend request sent to {friend_info['username']}!")
-    #                 st.rerun()
-                        
-    #         elif status == 'pending_sent':
-    #             st.sidebar.info("Friend request sent.")
-    #             if st.sidebar.button("Cancel Request"):
-    #                 save_friend_data(user_id, friend_username, action='cancel_request')
-    #                 st.sidebar.success("Friend request canceled.")
-    #                 st.rerun()
-                        
-    #         elif status == 'pending_received':
-    #             col1, col2 = st.sidebar.columns(2)
-    #             with col1:
-    #                 if st.button("Accept"):
-    #                     save_friend_data(user_id, friend_username, action='accept_request')
-    #                     st.sidebar.success(f"You are now friends with {friend_info['username']}!")
-    #                     st.rerun()
-                            
-    #             with col2:
-    #                 if st.button("Reject"):
-    #                     save_friend_data(user_id, friend_username, action='reject_request')
-    #                     st.sidebar.success("Friend request rejected.")
-    #                     st.rerun()
-                            
-    #         elif status == 'friends':
-    #             st.sidebar.success("You are friends!")
-    #             if st.sidebar.button("Remove Friend"):
-    #                 save_friend_data(user_id, friend_username, action='remove_friend')
-    #                 st.sidebar.success(f"Removed {friend_info['username']} from your friends.")
-    #                 st.rerun()
+        if not pending_requests:
+            st.info("No pending friend requests.")
+        else:
+            for req in pending_requests:
+                with st.container():
+                    st.write(f"👤 {req['username']} sent you a friend request.")
+                    col1, col2 = st.columns([1, 1])
+
+                    with col1:
+                        if st.button(f"✅ Accept {req['username']}", key=f"accept_{req['user_id']}"):
+                            accept_friend_request(user_id, req['user_id'])
+                            st.success(f"You are now friends with {req['username']}!")
+                            st.rerun()
+
+                    with col2:
+                        if st.button(f"❌ Decline {req['username']}", key=f"decline_{req['user_id']}"):
+                            decline_friend_request(user_id, req['user_id'])
+                            st.info(f"Declined friend request from {req['username']}.")
+                            st.rerun()
 
 #created with help from gemini, asked it to create a leaderboard table based on leaderboard_data and to then also add the
 #friend's profile functionality
@@ -640,6 +515,7 @@ def goal_creation_ui(user_id):
     """
     pass
 
+# Partially created by ChatGPT and Claude to "make a table showing the tasks obtained from ai_call_for_planner"
 def goal_plan_display_ui(user_id):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Plan Display UI (Kei) ===
     """
@@ -647,6 +523,15 @@ def goal_plan_display_ui(user_id):
     is returned in said function. It uses save_plan so that it can be saved into the database to save
     the plan.
     """
+
+    # Check if we should show calendar view
+    if st.session_state.get("show_calendar"):
+        task_id = st.session_state.get("calendar_task_id")
+        start = st.session_state.get("calendar_start")
+        end = st.session_state.get("calendar_end")
+        goal_progress_tracking_ui(user_id, task_id, start, end)
+        return  # Don't continue with the planning UI
+
     ai_response = ai_call_for_planner(user_id)
 
     if 'content' in ai_response and isinstance(ai_response['content'], dict):
@@ -734,6 +619,14 @@ def goal_plan_display_ui(user_id):
                         st.success(f"Plan accepted! 📅 From {start_date} to {end_date}")
                         save_plan(user_id, ai_response)
 
+                        # Set session state to switch to progress tracking view
+                        st.session_state["show_calendar"] = True
+                        st.session_state["calendar_start"] = start_date
+                        st.session_state["calendar_end"] = end_date
+                        st.session_state["calendar_task_id"] = task_id
+                        
+                        st.rerun()  # force rerun to trigger state switch
+
                 if reject_clicked:
                     st.error("Plan rejected.")
 
@@ -763,57 +656,196 @@ def goal_plan_display_ui(user_id):
         if 'content' in ai_response:
             st.write(f"Raw AI Response: {ai_response['content']}")
 
-def goal_progress_tracking_ui(user_id, task_id):
+def goal_progress_tracking_ui(user_id, task_id, start_date, end_date):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Progress Tracking (Ariana) ===
     """
+    Displays a calendar where a user can click a date to view and interact with tasks
+    as a checklist. Data is fetched from and written to the database.
+
     Note: Calls get_progress_data in data_fetcher.py to make sure the 
-    user's progress data of the specific task_id is properly stored and retrieved from database.
+    user's progress data of the specific task_id is properly stored and retrieved from database. It also calls mark_task to mark/unmark a task as completed and for
+    it to be reflected in the database.
     """
-    st.markdown("## 🏆 Your Goal Progress")
+    from datetime import timedelta, date
+    import pandas as pd
 
-    # Initialize BigQuery client
-    client = bigquery.Client()
+    st.markdown("""
+        <style>
+            .calendar-container * {
+                color: white !important;
+            }
+            .calendar-button button {
+                color: white !important;
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
-    # Query to get total tasks and completed tasks
-    query = """
-    SELECT
-        COUNT(*) AS total_days,
-        SUM(CASE WHEN completed = TRUE THEN 1 ELSE 0 END) AS completed_days
-    FROM `keishlyanysanabriatechx25.bytemeproject.UserTaskPlans`
-    WHERE user_id = {user_id} AND task_id = {task_id}
+    st.markdown(f"<h2 style='font-size: 1.5em;'>📅 Track Your Progress</h2>", unsafe_allow_html=True)
+
+    # Retrieve progress data
+    progress_data = get_progress_data(user_id, task_id)
+
+    # Generate full date range
+    date_range = pd.date_range(start=start_date, end=end_date)
+    all_dates = list(date_range)
+    selected_date = st.session_state.get("selected_calendar_date", None)
+
+    # Group dates by month
+    dates_by_month = {}
+    for d in all_dates:
+        month_key = d.strftime("%B %Y")
+        dates_by_month.setdefault(month_key, []).append(d)
+
+    # Loop through each month and render a calendar grid
+    for month_key, dates in dates_by_month.items():
+        st.markdown(f"## {month_key}")  # e.g., "April 2025"
+        weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        columns = st.columns(7)
+
+        # Add weekday headers
+        for i, day_name in enumerate(weekdays):
+            with columns[i]:
+                st.markdown(f"**{day_name}**")
+
+        # Fill in empty days at the beginning
+        first_day = dates[0]
+        offset = first_day.weekday()  # Monday = 0
+        columns = st.columns(7)
+        for i in range(offset):
+            columns[i].empty()
+
+        # Render each date as a button
+        for i, d in enumerate(dates):
+            col_idx = (i + offset) % 7
+            col = columns[col_idx]
+            button_label = str(d.day)
+            button_key = f"calendar_button_{d}"
+
+            if col.button(button_label, key=button_key):
+                st.session_state["selected_calendar_date"] = d
+                selected_date = d
+
+            # Start a new week row
+            if col_idx == 6 and i + 1 < len(dates):
+                columns = st.columns(7)
+
+    # Show task checklist if a date is selected
+    if selected_date:
+        selected_str = selected_date.strftime("%Y-%m-%d")
+        st.markdown(f"### Tasks for {selected_date.strftime('%A, %B %d, %Y')}")
+        tasks_for_day = progress_data.get(selected_str, [])
+
+        if not tasks_for_day:
+            st.info("No tasks planned for this day.")
+        else:
+            for i, task_info in enumerate(tasks_for_day):
+                task_name = task_info.get("task", f"Task {i+1}")
+                completed = task_info.get("completed", False)
+
+                # Show checkbox
+                new_state = st.checkbox(task_name, value=completed, key=f"{selected_str}_{i}")
+
+                if new_state != completed:
+                    mark_task(user_id, task_id, selected_str, i, new_state)
+                    st.success(f"Marked '{task_name}' as {'completed' if new_state else 'incomplete'}.")
+
+    st.markdown("""<hr style="border:1px solid #ccc;">""", unsafe_allow_html=True)
+
+def goal_progress_tracking_ui(user_id, task_id, start_date, end_date):
+    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Progress Tracking (Ariana) ===
     """
+    Displays a calendar where a user can click a date to view and interact with tasks
+    as a checklist. Data is fetched from and written to the database.
 
-    # Parameterized query to avoid SQL injection
-    job_config = bigquery.QueryJobConfig(
-        query_parameters=[
-            bigquery.ScalarQueryParameter("user_id", "STRING", user_id),
-            bigquery.ScalarQueryParameter("task_id", "STRING", task_id),
-        ]
-    )
+    Note: Calls get_progress_data in data_fetcher.py to make sure the 
+    user's progress data of the specific task_id is properly stored and retrieved from database. It also calls mark_task to mark/unmark a task as completed and for
+    it to be reflected in the database.
+    """
+    from datetime import timedelta, date
+    import pandas as pd
 
-    # Run the query
-    query_job = client.query(query, job_config=job_config)
-    result = query_job.result().to_dataframe()
+    st.markdown("""
+        <style>
+            .calendar-container * {
+                color: white !important;
+            }
+            .calendar-button button {
+                color: white !important;
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
-    # Extract results
-    total_days = result.iloc[0]["total_days"]
-    completed_days = result.iloc[0]["completed_days"]
+    st.markdown(f"<h2 style='font-size: 1.5em;'>📅 Track Your Progress</h2>", unsafe_allow_html=True)
 
-    if total_days == 0:
-        st.warning("⚠️ No tasks found for this fitness plan yet.")
-        return
+    # Retrieve progress data
+    progress_data = get_progress_data(user_id, task_id)
 
-    # Calculate progress
-    progress_ratio = completed_days / total_days
+    # Generate full date range
+    date_range = pd.date_range(start=start_date, end=end_date)
+    all_dates = list(date_range)
+    selected_date = st.session_state.get("selected_calendar_date", None)
 
-    # Display the progress bar and percentage
-    st.progress(progress_ratio)
-    st.write(f"✅ {completed_days} out of {total_days} activities completed ({progress_ratio * 100:.1f}%)")
+    # Group dates by month
+    dates_by_month = {}
+    for d in all_dates:
+        month_key = d.strftime("%B %Y")
+        dates_by_month.setdefault(month_key, []).append(d)
 
-    # Optional milestone messages
-    if progress_ratio == 1.0:
-        st.success("🎉 Congratulations! You've completed your fitness plan!")
-    elif progress_ratio >= 0.75:
-        st.info("🔥 Almost there! Stay consistent!")
-    elif progress_ratio >= 0.5:
-        st.info("💪 You're halfway through your goal. Keep pushing!")
+    # Loop through each month and render a calendar grid
+    for month_key, dates in dates_by_month.items():
+        st.markdown(f"## {month_key}")  # e.g., "April 2025"
+        weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        columns = st.columns(7)
+
+        # Add weekday headers
+        for i, day_name in enumerate(weekdays):
+            with columns[i]:
+                st.markdown(f"**{day_name}**")
+
+        # Fill in empty days at the beginning
+        first_day = dates[0]
+        offset = first_day.weekday()  # Monday = 0
+        columns = st.columns(7)
+        for i in range(offset):
+            columns[i].empty()
+
+        # Render each date as a button
+        for i, d in enumerate(dates):
+            col_idx = (i + offset) % 7
+            col = columns[col_idx]
+            button_label = str(d.day)
+            button_key = f"calendar_button_{d}"
+
+            if col.button(button_label, key=button_key):
+                st.session_state["selected_calendar_date"] = d
+                selected_date = d
+
+            # Start a new week row
+            if col_idx == 6 and i + 1 < len(dates):
+                columns = st.columns(7)
+
+    # Show task checklist if a date is selected
+    if selected_date:
+        # Map the selected date to "Day X" format
+        day_label = f"Day {list(date_range).index(selected_date) + 1}"
+
+        st.markdown(f"### Tasks for {selected_date.strftime('%A, %B %d, %Y')} (Day {list(date_range).index(selected_date) + 1})")
+        
+        # Get tasks for the selected "Day X"
+        tasks_for_day = progress_data.get(day_label, [])
+
+        if not tasks_for_day:
+            st.info("No tasks planned for this day.")
+        else:
+            for i, task_info in enumerate(tasks_for_day):
+                task_name = task_info.get("activity", f"Task {i+1}")
+                completed = task_info.get("completed", False)
+
+                # Show checkbox
+                new_state = st.checkbox(task_name, value=completed, key=f"{day_label}_{i}")
+
+                if new_state != completed:
+                    mark_task(user_id, task_id, day_label, i, new_state)
+                    st.success(f"Marked '{task_name}' as {'completed' if new_state else 'incomplete'}.")
+
+    st.markdown("""<hr style="border:1px solid #ccc;">""", unsafe_allow_html=True)
