@@ -736,8 +736,11 @@ def ai_call_for_planner(user_id):
             'content': f"Error: Could not parse the AI response as a JSON dictionary. Raw response: {response.text}. Error details: {e}"
         }
 
-def save_plan(user_id, ai_response, client=bigquery.Client()):
+def save_plan(user_id, ai_response, client=None):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Plan Display UI (Kei) ===
+
+    if client is None:
+        client = bigquery.Client()
 
     # Extract values from the AI response
     task_id = ai_response.get("task_id")
