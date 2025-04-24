@@ -331,11 +331,14 @@ def get_genai_advice(user_id):
     return {'advice_id': id, 'timestamp': advice_timestamp, 'content' : response.candidates[0].content.parts[0].text.strip(), 'image' : image}
 
 # Created by ChatGPT to "make a function that checks if the username is a friend of user_id and if that friend exists in the database"
-def get_friend_data(user_id, friend_username):
+def get_friend_data(user_id, friend_username, client=None):
     """
     Checks if the username exists, and if it's a valid friend (not yourself),
     determines if the two users are friends.
     """
+
+    if client is None:
+        client = bigquery.Client()
 
     # Step 1: Look up UserId of friend_username
     get_friend_id_query = """
@@ -381,10 +384,13 @@ def get_friend_data(user_id, friend_username):
         return f"You and '{friend_username}' are not friends yet."
 
 # Function mostly made by ChatGPT: "Following the database structure, create a function that lets the user send a friend request"
-def send_friend_request(user_id, friend_username):
+def send_friend_request(user_id, friend_username, client=None):
     """
     Sends a friend request from user_id to the user with friend_username.
     """
+
+    if client is None:
+        client = bigquery.Client()
 
     # Step 1: Resolve friend_username to friend_id
     get_friend_id_query = """
@@ -457,11 +463,14 @@ def send_friend_request(user_id, friend_username):
     return f"Friend request sent to {friend_username}!"
 
 # Function mostly made by ChatGPT: "Following the database structure, create a function that lets the user remove a friend"
-def remove_friend(user_id, friend_username):
+def remove_friend(user_id, friend_username, client=None):
     """
     Removes the friend relationship between user_id and friend_username.
     First resolves friend_username to UserId, then deletes the friendship if it exists.
     """
+
+    if client is None:
+        client = bigquery.Client()
 
     # Resolve Username to UserId
     get_friend_id_query = """
@@ -494,6 +503,87 @@ def remove_friend(user_id, friend_username):
 
     client.query(delete_query, job_config=job_config_delete).result()
     return f"Friendship with {friend_username} has been removed."
+
+# Function created by ChatGPT: "create a function that checks the pending requests that the user_id currently has, it will be shown in an already created tab"
+def get_pending_requests(user_id, client=None):
+    """
+    Returns a list of usernames who have sent a friend request to the given user_id.
+    """
+
+    if client is None:
+        client = bigquery.Client()
+    
+    query = """
+    SELECT U.Username AS SenderUsername, FR.RequesterId
+    FROM `keishlyanysanabriatechx25.bytemeproject.FriendRequests` FR
+    JOIN `keishlyanysanabriatechx25.bytemeproject.Users` U
+    ON FR.RequesterId = U.UserId
+    WHERE FR.ReceiverId = @user_id
+    ORDER BY FR.RequestedAt DESC
+    """
+
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("user_id", "STRING", user_id)
+        ]
+    )
+
+    results = client.query(query, job_config=job_config).result()
+
+    return [{"username": row["SenderUsername"], "user_id": row["RequesterId"]} for row in results]
+
+# Following 2 functions partially created by ChatGPT: "create the lines to accept and decline the friend requests. it should use the following functions to save/decline those friends: accept_friend_request"
+def accept_friend_request(current_user_id, requester_id, client=None):
+    if client is None:
+        client = bigquery.Client()
+
+    # Add friendship in one direction only
+    insert_query = """
+    INSERT INTO `keishlyanysanabriatechx25.bytemeproject.Friends` (UserId1, UserId2)
+    VALUES (@user1, @user2)
+    """
+
+    insert_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("user1", "STRING", current_user_id),
+            bigquery.ScalarQueryParameter("user2", "STRING", requester_id),
+        ]
+    )
+
+    client.query(insert_query, job_config=insert_config).result()
+
+    # Remove the friend request
+    delete_query = """
+    DELETE FROM `keishlyanysanabriatechx25.bytemeproject.FriendRequests`
+    WHERE RequesterId = @requester_id AND ReceiverId = @receiver_id
+    """
+
+    delete_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("requester_id", "STRING", requester_id),
+            bigquery.ScalarQueryParameter("receiver_id", "STRING", current_user_id),
+        ]
+    )
+
+    client.query(delete_query, job_config=delete_config).result()
+
+def decline_friend_request(current_user_id, requester_id, client=None):
+    if client is None:
+        client = bigquery.Client()
+
+    query = """
+    DELETE FROM `keishlyanysanabriatechx25.bytemeproject.FriendRequests`
+    WHERE RequesterId = @requester_id AND ReceiverId = @receiver_id
+    """
+
+    config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("requester_id", "STRING", requester_id),
+            bigquery.ScalarQueryParameter("receiver_id", "STRING", current_user_id),
+        ]
+    )
+
+    client.query(query, job_config=config).result()
 
 #the query was generated by gemini. i described the tables to it and then i asked it to create the query so that it returns the friend's workout data
 def get_leaderboard_data(user_id):
@@ -589,9 +679,14 @@ def save_goal(user_id):
     #return goal?
 
 def ai_call_for_planner(user_id):
-    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test AI Integration for Goal Planning (Daniela) ===
-    # Make a comment letting know the AI request/response format for when someone uses this function, they understand the format
-    #had to do this global vertexai variable to handle mocks in tests correctly
+    # === Design, Implement and Test AI Integration for Goal Planning (Daniela) ===
+    # AI Response Format:
+    # {
+    #     "Day 1": [{"activity": "Running", "duration": "30 minutes", "calories_goal": 200}],
+    #     ...
+    # },
+    # "general_tip": "Make sure to stretch before and after each workout."
+    
     global _vertexai_initialized
     load_dotenv()
     if not _vertexai_initialized:
@@ -600,22 +695,78 @@ def ai_call_for_planner(user_id):
         _vertexai_initialized = True
 
     workouts = get_user_workouts(user_id) 
-
     goal = save_goal(user_id)
-
     model = GenerativeModel("gemini-1.5-flash-002")
 
-    system_instruction = ("You are a the main fitness trainer for a fitness app. You are getting information about the user's past workouts in the 'workouts' list of dictionaries")
+    system_instruction = (
+        "You are the lead fitness trainer for a fitness app. You're getting user past workouts "
+        "in the 'workouts' list of dictionaries."
+    )
 
-    response = model.generate_content(f"""Based on the goal: '{goal}' and your knowledge of the user's past workouts: {workouts}, please generate a fitness plan. Return this plan as a Python dictionary where the keys are the day (e.g., 'Day 1', 'Day 2', ..., etc) and the values are the recommended workout(s) for that day (the user will enter the amount of days they plan for their goal, e.g. if they say their goal is for 30 days, do a 30 day plan and so on). Please provide specific exercises or types of activities. Take into consideration the user's past workouts to create a balanced and effective plan. The output should ONLY be a valid JSON dictionary, without any surrounding text or code blocks. Also please don't add line breaks""")
+    response = model.generate_content(f"""
+        Based on the goal: '{goal}' and your knowledge of the user's past workouts: {workouts}, please generate a fitness plan. 
+        Return a JSON dictionary with two keys: 
+        1. "plan" → a dictionary where the keys are the days (e.g., 'Day 1', 'Day 2', ..., etc), and values are a list of recommended workouts for that day. 
+           Each workout should be a dictionary with 'activity', 'duration', and 'calories_goal'.
+        2. "general_tip" → a single helpful fitness tip relevant to the entire plan.
 
-    task_id = random.randint(1, 1000000) #create a random id for the advice
+        Please provide specific exercises or types of activities. Take into consideration the user's past workouts to create a balanced and effective plan. The output should ONLY be a valid JSON dictionary, without any surrounding text or code blocks. Also please don't add line breaks.
+    """)
+
+    task_id = random.randint(1, 1000000)
 
     try:
-        plan_dictionary = json.loads(response.text)
-        return {'task_id': task_id, 'content': plan_dictionary} #return dictionary. content is another dictionary {day:}
+        full_response = json.loads(response.text)
+
+        plan_dictionary = full_response.get("plan", {})
+        general_tip = full_response.get("general_tip", "")
+
+        return {
+            'task_id': task_id,
+            'content': plan_dictionary,
+            'general_tip': general_tip
+        }
     except json.JSONDecodeError as e:
-        return {'task_id': task_id, 'content': f"Error: Could not parse the AI response as a JSON dictionary. Raw response: {response.text}. Error details: {e}"}
+        return {
+            'task_id': task_id,
+            'content': f"Error: Could not parse the AI response as a JSON dictionary. Raw response: {response.text}. Error details: {e}"
+        }
+
+def save_plan(user_id, ai_response, client=None):
+    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Plan Display UI (Kei) ===
+
+    if client is None:
+        client = bigquery.Client()
+
+    # Extract values from the AI response
+    task_id = ai_response.get("task_id")
+    content_dict = ai_response.get("content", {})
+    general_tip = ai_response.get("general_tip", "")
+
+    # Safely convert content to JSON string (or leave error string if parsing failed)
+    if isinstance(content_dict, dict):
+        content_json = json.dumps(content_dict)
+    else:
+        content_json = str(content_dict)
+
+    # Prepare the row to insert
+    row = {
+        "task_id": task_id,
+        "user_id": user_id,
+        "content": content_json,
+        "general_tip": general_tip
+    }
+
+    # Define table ID
+    table_id = "keishlyanysanabriatechx25.bytemeproject.UserTaskPlans"
+
+    # Insert the row
+    errors = client.insert_rows_json(table_id, [row])
+
+    if errors:
+        print(f"❌ Failed to insert into BigQuery: {errors}")
+    else:
+        print("✅ Plan successfully saved to BigQuery!")
     
 
 def mark_task(user_id, task_id):

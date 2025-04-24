@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 # Import for display_post
 import requests
 import base64
-from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friend_data, send_friend_request, remove_friend, get_leaderboard_data, leaderboard_scoring_logic, save_goal, ai_call_for_planner, mark_task, get_progress_data
+from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friend_data, send_friend_request, remove_friend, get_leaderboard_data, leaderboard_scoring_logic, save_goal, ai_call_for_planner, mark_task, get_progress_data, save_plan
 
 # Import for user_profile
 import datetime
@@ -270,7 +270,8 @@ def display_user_profile(user_id):
         st.write(f"**@{user_profile['username']}**")
         
         # Add buttons for actions
-        st.button("Edit Profile")
+        st.button("Edit Profile", key=f"edit_profile_{user_id}")
+
     
     # User details in right column
     with col2:
@@ -643,16 +644,15 @@ def goal_plan_display_ui(user_id):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Plan Display UI (Kei) ===
     """
     Note: This function will call ai_call_for_planner in data_fetcher.py to show the data that
-    is returned in said function. It also calls mark_task to mark/unmark a task as completed and for
-    it to be reflected in the database.
+    is returned in said function. It uses save_plan so that it can be saved into the database to save
+    the plan.
     """
-    #goal = save_goal(user_id)
     ai_response = ai_call_for_planner(user_id)
 
     if 'content' in ai_response and isinstance(ai_response['content'], dict):
         plan = ai_response['content']
         task_id = ai_response['task_id']
-        st.markdown(f"<h2 style='font-size: 1.5em;'>Your Fitness Plan</h2>", unsafe_allow_html=True)
+        st.markdown(f"<h2 style='font-size: 1.5em;'>Plan to {save_goal(user_id).lower()}</h2>", unsafe_allow_html=True)
 
         # Google colors
         google_blue = "#4285F4"
@@ -667,53 +667,89 @@ def goal_plan_display_ui(user_id):
 
         for day, activities in plan.items():
             tasks_html_list = []
-            if isinstance(activities, list):
-                for i, activity in enumerate(activities):
-                    key = f"{task_id}_{day}_{i}"
-                    completed = completed_tasks.get(key, False)
-                    checkbox_id = f"checkbox_{key}"
-                    checked_attribute = "checked" if completed else ""
-                    checkbox_html = f'<input type="checkbox" id="{checkbox_id}" {checked_attribute} onchange="handleCheckboxChange(\'{key}\')">'
-                    label_html = f'<label for="{checkbox_id}">{activity}</label>'
-                    task_html = f"{checkbox_html} <span style='margin-left: 0.5em;'>{label_html}</span>" # Add spacing
-                    tasks_html_list.append(task_html)
-            else:
-                key = f"{task_id}_{day}"
-                completed = completed_tasks.get(key, False)
-                checkbox_id = f"checkbox_{key}"
-                checked_attribute = "checked" if completed else ""
-                checkbox_html = f'<input type="checkbox" id="{checkbox_id}" {checked_attribute} onchange="handleCheckboxChange(\'{key}\')">'
-                label_html = f'<label for="{checkbox_id}">{activities}</label>'
-                task_html = f"{checkbox_html} <span style='margin-left: 0.5em;'>{label_html}</span>" # Add spacing
+
+            # Normalize to list
+            if not isinstance(activities, list):
+                activities = [activities]
+
+            for i, activity in enumerate(activities):
+                if isinstance(activity, dict):
+                    activity_text = (
+                        f"{activity.get('activity', 'No activity')}<br>"
+                        f"{activity.get('duration', 'No duration')}<br>"
+                        f"Goal: {activity.get('calories_goal', 'N/A')} cal"
+                    )
+                else:
+                    activity_text = str(activity)
+
+                # Create a list item instead of checkbox
+                task_html = f"<li style='margin-bottom: 0.5em;'>{activity_text}</li>"
                 tasks_html_list.append(task_html)
 
-            table_data.append({'Day': f"<span style='color: {colors[color_index % len(colors)]}; font-weight: bold;'>{day}</span>",
-                               'Tasks': "<br>".join(tasks_html_list)})
+            table_data.append({
+                'Day': f"<span style='color: {colors[color_index % len(colors)]}; font-weight: bold;'>{day}</span>",
+                'Tasks': f"<ul>{''.join(tasks_html_list)}</ul>"
+            })
+
             color_index += 1
 
         if table_data:
-            df = pd.DataFrame(table_data)
-            st.markdown(df.to_html(index=False, escape=False), unsafe_allow_html=True)
-            st.markdown("""
-            <script>
-            function handleCheckboxChange(key) {
-            const isChecked = document.getElementById('checkbox_' + key).checked;
-            fetch('/_stcore/update_state', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ key: 'checkbox_' + key, value: isChecked })
-            }).then(() => {
-                // State is managed by Streamlit
-            });
-            }
-            </script>
-            """, unsafe_allow_html=True)
+            # Create columns for table and buttons
+            col1, col2 = st.columns([8, 2])
+            
+            with col1:
+                df = pd.DataFrame(table_data)
+                st.markdown(df.to_html(index=False, escape=False), unsafe_allow_html=True)
+                st.markdown("""
+                <script>
+                function handleCheckboxChange(key) {
+                const isChecked = document.getElementById('checkbox_' + key).checked;
+                fetch('/_stcore/update_state', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: 'checkbox_' + key, value: isChecked })
+                }).then(() => {
+                    // State is managed by Streamlit
+                });
+                }
+                </script>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                st.write("###")
+
+                # Date inputs
+                start_date = st.date_input("Start Date", key="start_date")
+                end_date = st.date_input("End Date", key="end_date")
+
+                # Accept/Reject Buttons
+                accept_clicked = st.button("Accept", key="accept_plan")
+                reject_clicked = st.button("Reject", key="reject_plan")
+
+                # Handle click events
+                if accept_clicked:
+                    if start_date > end_date:
+                        st.warning("Start date cannot be after end date!")
+                    else:
+                        st.success(f"Plan accepted! 📅 From {start_date} to {end_date}")
+                        save_plan(user_id, ai_response)
+
+                if reject_clicked:
+                    st.error("Plan rejected.")
 
             # Call mark_task_completed based on session state
             if f"completed_tasks_{task_id}" in st.session_state:
                 for key, completed in st.session_state[f"completed_tasks_{task_id}"].items():
                     day_from_key = key.split('_')[0] if '_' in key else "" # Extract day if possible
                     #mark_task_completed(user_id, task_id, day_from_key, completed)
+        
+        # Display general fitness tip if available
+        if 'general_tip' in ai_response and ai_response['general_tip']:
+            st.markdown("""
+            <hr style="border:1px solid #ccc;">
+            <h3 style='font-size: 1.2em;'>General tips:</h3>
+            <p style='font-size: 1em; color: #333;'>{}</p>
+            """.format(ai_response['general_tip']), unsafe_allow_html=True)
 
         st.markdown("""
         <hr style="border:1px solid #ccc;">
@@ -733,4 +769,51 @@ def goal_progress_tracking_ui(user_id, task_id):
     Note: Calls get_progress_data in data_fetcher.py to make sure the 
     user's progress data of the specific task_id is properly stored and retrieved from database.
     """
-    pass
+    st.markdown("## 🏆 Your Goal Progress")
+
+    # Initialize BigQuery client
+    client = bigquery.Client()
+
+    # Query to get total tasks and completed tasks
+    query = """
+    SELECT
+        COUNT(*) AS total_days,
+        SUM(CASE WHEN completed = TRUE THEN 1 ELSE 0 END) AS completed_days
+    FROM `keishlyanysanabriatechx25.bytemeproject.UserTaskPlans`
+    WHERE user_id = {user_id} AND task_id = {task_id}
+    """
+
+    # Parameterized query to avoid SQL injection
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("user_id", "STRING", user_id),
+            bigquery.ScalarQueryParameter("task_id", "STRING", task_id),
+        ]
+    )
+
+    # Run the query
+    query_job = client.query(query, job_config=job_config)
+    result = query_job.result().to_dataframe()
+
+    # Extract results
+    total_days = result.iloc[0]["total_days"]
+    completed_days = result.iloc[0]["completed_days"]
+
+    if total_days == 0:
+        st.warning("⚠️ No tasks found for this fitness plan yet.")
+        return
+
+    # Calculate progress
+    progress_ratio = completed_days / total_days
+
+    # Display the progress bar and percentage
+    st.progress(progress_ratio)
+    st.write(f"✅ {completed_days} out of {total_days} activities completed ({progress_ratio * 100:.1f}%)")
+
+    # Optional milestone messages
+    if progress_ratio == 1.0:
+        st.success("🎉 Congratulations! You've completed your fitness plan!")
+    elif progress_ratio >= 0.75:
+        st.info("🔥 Almost there! Stay consistent!")
+    elif progress_ratio >= 0.5:
+        st.info("💪 You're halfway through your goal. Keep pushing!")
