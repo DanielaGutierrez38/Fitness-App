@@ -13,7 +13,7 @@ import os
 import datetime
 import pytz
 import sys
-from data_fetcher import get_user_sensor_data, get_genai_advice, load_dotenv, vertexai, get_user_profile, ai_call_for_planner
+# from data_fetcher import get_user_sensor_data, get_genai_advice, load_dotenv, vertexai, get_user_profile, ai_call_for_planner
 from vertexai.generative_models import GenerativeModel
 from data_fetcher import _vertexai_initialized
 from dotenv import load_dotenv
