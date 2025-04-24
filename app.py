@@ -54,9 +54,6 @@ def display_app_page():
         display_sensor_data(sensor_data)
 
     with tab6:
-        client = bigquery.Client()
-        
-
         def display_all_posts():
 
             posts = get_user_posts(userId)
