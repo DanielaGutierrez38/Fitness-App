@@ -525,6 +525,15 @@ def goal_plan_display_ui(user_id):
     is returned in said function. It uses save_plan so that it can be saved into the database to save
     the plan.
     """
+
+    # Check if we should show calendar view
+    if st.session_state.get("show_calendar"):
+        task_id = st.session_state.get("calendar_task_id")
+        start = st.session_state.get("calendar_start")
+        end = st.session_state.get("calendar_end")
+        goal_progress_tracking_ui(user_id, task_id, start, end)
+        return  # Don't continue with the planning UI
+
     ai_response = ai_call_for_planner(user_id)
 
     if 'content' in ai_response and isinstance(ai_response['content'], dict):
@@ -612,6 +621,14 @@ def goal_plan_display_ui(user_id):
                         st.success(f"Plan accepted! 📅 From {start_date} to {end_date}")
                         save_plan(user_id, ai_response)
 
+                        # Set session state to switch to progress tracking view
+                        st.session_state["show_calendar"] = True
+                        st.session_state["calendar_start"] = start_date
+                        st.session_state["calendar_end"] = end_date
+                        st.session_state["calendar_task_id"] = task_id
+                        
+                        st.rerun()  # force rerun to trigger state switch
+
                 if reject_clicked:
                     st.error("Plan rejected.")
 
@@ -641,11 +658,196 @@ def goal_plan_display_ui(user_id):
         if 'content' in ai_response:
             st.write(f"Raw AI Response: {ai_response['content']}")
 
-def goal_progress_tracking_ui(user_id, task_id):
+def goal_progress_tracking_ui(user_id, task_id, start_date, end_date):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Progress Tracking (Ariana) ===
     """
+    Displays a calendar where a user can click a date to view and interact with tasks
+    as a checklist. Data is fetched from and written to the database.
+
     Note: Calls get_progress_data in data_fetcher.py to make sure the 
     user's progress data of the specific task_id is properly stored and retrieved from database. It also calls mark_task to mark/unmark a task as completed and for
     it to be reflected in the database.
     """
-    pass
+    from datetime import timedelta, date
+    import pandas as pd
+
+    st.markdown("""
+        <style>
+            .calendar-container * {
+                color: white !important;
+            }
+            .calendar-button button {
+                color: white !important;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown(f"<h2 style='font-size: 1.5em;'>📅 Track Your Progress</h2>", unsafe_allow_html=True)
+
+    # Retrieve progress data
+    progress_data = get_progress_data(user_id, task_id)
+
+    # Generate full date range
+    date_range = pd.date_range(start=start_date, end=end_date)
+    all_dates = list(date_range)
+    selected_date = st.session_state.get("selected_calendar_date", None)
+
+    # Group dates by month
+    dates_by_month = {}
+    for d in all_dates:
+        month_key = d.strftime("%B %Y")
+        dates_by_month.setdefault(month_key, []).append(d)
+
+    # Loop through each month and render a calendar grid
+    for month_key, dates in dates_by_month.items():
+        st.markdown(f"## {month_key}")  # e.g., "April 2025"
+        weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        columns = st.columns(7)
+
+        # Add weekday headers
+        for i, day_name in enumerate(weekdays):
+            with columns[i]:
+                st.markdown(f"**{day_name}**")
+
+        # Fill in empty days at the beginning
+        first_day = dates[0]
+        offset = first_day.weekday()  # Monday = 0
+        columns = st.columns(7)
+        for i in range(offset):
+            columns[i].empty()
+
+        # Render each date as a button
+        for i, d in enumerate(dates):
+            col_idx = (i + offset) % 7
+            col = columns[col_idx]
+            button_label = str(d.day)
+            button_key = f"calendar_button_{d}"
+
+            if col.button(button_label, key=button_key):
+                st.session_state["selected_calendar_date"] = d
+                selected_date = d
+
+            # Start a new week row
+            if col_idx == 6 and i + 1 < len(dates):
+                columns = st.columns(7)
+
+    # Show task checklist if a date is selected
+    if selected_date:
+        selected_str = selected_date.strftime("%Y-%m-%d")
+        st.markdown(f"### Tasks for {selected_date.strftime('%A, %B %d, %Y')}")
+        tasks_for_day = progress_data.get(selected_str, [])
+
+        if not tasks_for_day:
+            st.info("No tasks planned for this day.")
+        else:
+            for i, task_info in enumerate(tasks_for_day):
+                task_name = task_info.get("task", f"Task {i+1}")
+                completed = task_info.get("completed", False)
+
+                # Show checkbox
+                new_state = st.checkbox(task_name, value=completed, key=f"{selected_str}_{i}")
+
+                if new_state != completed:
+                    mark_task(user_id, task_id, selected_str, i, new_state)
+                    st.success(f"Marked '{task_name}' as {'completed' if new_state else 'incomplete'}.")
+
+    st.markdown("""<hr style="border:1px solid #ccc;">""", unsafe_allow_html=True)
+
+def goal_progress_tracking_ui(user_id, task_id, start_date, end_date):
+    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Progress Tracking (Ariana) ===
+    """
+    Displays a calendar where a user can click a date to view and interact with tasks
+    as a checklist. Data is fetched from and written to the database.
+
+    Note: Calls get_progress_data in data_fetcher.py to make sure the 
+    user's progress data of the specific task_id is properly stored and retrieved from database. It also calls mark_task to mark/unmark a task as completed and for
+    it to be reflected in the database.
+    """
+    from datetime import timedelta, date
+    import pandas as pd
+
+    st.markdown("""
+        <style>
+            .calendar-container * {
+                color: white !important;
+            }
+            .calendar-button button {
+                color: white !important;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown(f"<h2 style='font-size: 1.5em;'>📅 Track Your Progress</h2>", unsafe_allow_html=True)
+
+    # Retrieve progress data
+    progress_data = get_progress_data(user_id, task_id)
+
+    # Generate full date range
+    date_range = pd.date_range(start=start_date, end=end_date)
+    all_dates = list(date_range)
+    selected_date = st.session_state.get("selected_calendar_date", None)
+
+    # Group dates by month
+    dates_by_month = {}
+    for d in all_dates:
+        month_key = d.strftime("%B %Y")
+        dates_by_month.setdefault(month_key, []).append(d)
+
+    # Loop through each month and render a calendar grid
+    for month_key, dates in dates_by_month.items():
+        st.markdown(f"## {month_key}")  # e.g., "April 2025"
+        weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        columns = st.columns(7)
+
+        # Add weekday headers
+        for i, day_name in enumerate(weekdays):
+            with columns[i]:
+                st.markdown(f"**{day_name}**")
+
+        # Fill in empty days at the beginning
+        first_day = dates[0]
+        offset = first_day.weekday()  # Monday = 0
+        columns = st.columns(7)
+        for i in range(offset):
+            columns[i].empty()
+
+        # Render each date as a button
+        for i, d in enumerate(dates):
+            col_idx = (i + offset) % 7
+            col = columns[col_idx]
+            button_label = str(d.day)
+            button_key = f"calendar_button_{d}"
+
+            if col.button(button_label, key=button_key):
+                st.session_state["selected_calendar_date"] = d
+                selected_date = d
+
+            # Start a new week row
+            if col_idx == 6 and i + 1 < len(dates):
+                columns = st.columns(7)
+
+    # Show task checklist if a date is selected
+    if selected_date:
+        # Map the selected date to "Day X" format
+        day_label = f"Day {list(date_range).index(selected_date) + 1}"
+
+        st.markdown(f"### Tasks for {selected_date.strftime('%A, %B %d, %Y')} (Day {list(date_range).index(selected_date) + 1})")
+        
+        # Get tasks for the selected "Day X"
+        tasks_for_day = progress_data.get(day_label, [])
+
+        if not tasks_for_day:
+            st.info("No tasks planned for this day.")
+        else:
+            for i, task_info in enumerate(tasks_for_day):
+                task_name = task_info.get("activity", f"Task {i+1}")
+                completed = task_info.get("completed", False)
+
+                # Show checkbox
+                new_state = st.checkbox(task_name, value=completed, key=f"{day_label}_{i}")
+
+                if new_state != completed:
+                    mark_task(user_id, task_id, day_label, i, new_state)
+                    st.success(f"Marked '{task_name}' as {'completed' if new_state else 'incomplete'}.")
+
+    st.markdown("""<hr style="border:1px solid #ccc;">""", unsafe_allow_html=True)

@@ -733,7 +733,8 @@ def ai_call_for_planner(user_id):
     except json.JSONDecodeError as e:
         return {
             'task_id': task_id,
-            'content': f"Error: Could not parse the AI response as a JSON dictionary. Raw response: {response.text}. Error details: {e}"
+            'content': f"Error: Could not parse the AI response as a JSON dictionary. Raw response: {response.text}. Error details: {e}",
+            'general_tip' : f"Error: Could not parse the AI response as a JSON dictionary. Raw response: {response.text}. Error details: {e}"
         }
 
 def save_plan(user_id, ai_response, client=None):
@@ -772,15 +773,39 @@ def save_plan(user_id, ai_response, client=None):
     else:
         print("✅ Plan successfully saved to BigQuery!")
 
-def mark_task(user_id, task_id):
+def mark_task(user_id, task_id, date_str, task_index, is_completed, client=None):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Progress Tracking (Ariana) ===
     # For users to mark/unmark activities as completed
     pass
 
-def get_progress_data(user_id, task_id):
+def get_progress_data(user_id, task_id, client=None):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Progress Tracking (Ariana) ===
-    pass
 
-def get_all_friends():
-    pass
+    if client is None:
+        client = bigquery.Client()
 
+    query = f"""
+        SELECT content
+        FROM `bytemeproject.UserTaskPlans`
+        WHERE user_id = @user_id AND task_id = @task_id
+        LIMIT 1
+    """
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("user_id", "STRING", user_id),
+            bigquery.ScalarQueryParameter("task_id", "STRING", task_id),
+        ]
+    )
+    query_job = client.query(query, job_config=job_config)
+    results = list(query_job.result())
+
+    if not results:
+        return {}
+
+    # Deserialize JSON plan
+    content = results[0].content
+    try:
+        plan = json.loads(content)
+        return plan
+    except json.JSONDecodeError:
+        return {}
