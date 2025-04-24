@@ -317,7 +317,7 @@ def get_genai_advice(user_id):
     return {'advice_id': id, 'timestamp': advice_timestamp, 'content' : response.candidates[0].content.parts[0].text.strip(), 'image' : image}
 
 # Created by ChatGPT to "make a function that checks if the username is a friend of user_id and if that friend exists in the database"
-def get_friend_data(user_id, friend_username):
+def get_friend_data(user_id, friend_username, client=bigquery.Client()):
     """
     Checks if the username exists, and if it's a valid friend (not yourself),
     determines if the two users are friends.
@@ -367,7 +367,7 @@ def get_friend_data(user_id, friend_username):
         return f"You and '{friend_username}' are not friends yet."
 
 # Function mostly made by ChatGPT: "Following the database structure, create a function that lets the user send a friend request"
-def send_friend_request(user_id, friend_username):
+def send_friend_request(user_id, friend_username, client=bigquery.Client()):
     """
     Sends a friend request from user_id to the user with friend_username.
     """
@@ -443,7 +443,7 @@ def send_friend_request(user_id, friend_username):
     return f"Friend request sent to {friend_username}!"
 
 # Function mostly made by ChatGPT: "Following the database structure, create a function that lets the user remove a friend"
-def remove_friend(user_id, friend_username):
+def remove_friend(user_id, friend_username, client=bigquery.Client()):
     """
     Removes the friend relationship between user_id and friend_username.
     First resolves friend_username to UserId, then deletes the friendship if it exists.
@@ -507,7 +507,7 @@ def get_pending_requests(user_id, client=bigquery.Client()):
     return [{"username": row["SenderUsername"], "user_id": row["RequesterId"]} for row in results]
 
 # Following 2 functions partially created by ChatGPT: "create the lines to accept and decline the friend requests. it should use the following functions to save/decline those friends: accept_friend_request"
-def accept_friend_request(current_user_id, requester_id):
+def accept_friend_request(current_user_id, requester_id, client=bigquery.Client()):
     # Add friendship in one direction only
     insert_query = """
     INSERT INTO `keishlyanysanabriatechx25.bytemeproject.Friends` (UserId1, UserId2)
@@ -538,7 +538,7 @@ def accept_friend_request(current_user_id, requester_id):
 
     client.query(delete_query, job_config=delete_config).result()
 
-def decline_friend_request(current_user_id, requester_id):
+def decline_friend_request(current_user_id, requester_id, client=bigquery.Client()):
     query = """
     DELETE FROM `keishlyanysanabriatechx25.bytemeproject.FriendRequests`
     WHERE RequesterId = @requester_id AND ReceiverId = @receiver_id
