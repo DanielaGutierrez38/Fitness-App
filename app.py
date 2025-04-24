@@ -6,6 +6,8 @@
 #############################################################################
 
 import streamlit as st
+import re
+from datetime import datetime, date
 from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts, display_sensor_data, display_user_profile, friend_request_ui, create_leaderboard_ui, goal_creation_ui, goal_plan_display_ui, goal_progress_tracking_ui
 from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, add_post_to_database, get_friend_data, send_friend_request, remove_friend, get_leaderboard_data, leaderboard_scoring_logic, save_goal, ai_call_for_planner, mark_task, get_progress_data
 
@@ -185,6 +187,156 @@ def display_app_page():
     with tab10:
         # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Creation Interface (Darianne) ===
             # Call goal_creation_ui from modules.py
+        ###still working on this part #####
+        # --- 1. Save Goal to BigQuery ---
+        # def save_goal_to_bigquery(data):
+#     # Ensure you have the correct project ID, dataset, and table name
+#     project_id = "keishlyanysanabriatechx25"  # Make sure this is correct
+#     dataset_id = "bytemeproject"  # Make sure this is correct
+#     table_id = f"{project_id}.{dataset_id}.fitness_goal" # Format the table ID properly
+#     
+#     # Initialize the BigQuery client
+#     client = bigquery.Client(project="keishlyanysanabriatechx25")
+# 
+#     # Prepare the row to insert
+#     row_to_insert = {
+#         "user_id": data["user_id"],
+#         "goal_type": data["goal_type"],
+#         "target": data["target"],
+#         "timeframe": data["timeframe"],
+#         "start_date": data["start_date"].isoformat(),
+#         "end_date": data["end_date"].isoformat(),
+#         "created_at": datetime.utcnow().isoformat()
+#     }
+# 
+#     # Insert the row into BigQuery
+#     errors = client.insert_rows_json(table_id, [row_to_insert])  # Insert the row
+# 
+#     if not errors:
+#         return {"status": "success", "goal": f"Goal to {data['goal_type']} {data['target']} {data['timeframe']} saved successfully!"}
+#     else:
+#         return {"status": "error", "message": str(errors)}
+# 
+# # --- 2. Check Goal Realism ---
+# def is_realistic(goal_type, target, timeframe):
+#     limits = {
+#         "Calorie Burn": {"Day": 5000, "Week": 20000, "Month": 60000},
+#         "Steps": {"Day": 100000, "Week": 300000, "Month": 1000000},
+#         "Workouts": {"Day": 3, "Week": 14, "Month": 50}
+#     }
+#     return target <= limits.get(goal_type, {}).get(timeframe, float('inf'))
+# 
+# # --- 3. Goal Parser ---
+# def fitness_goal(goal_text):
+#     if not goal_text or not isinstance(goal_text, str):
+#         return {"valid": False, "error": "No goal text was provided or it's not a valid string."}
+# 
+#     goal_text = goal_text.lower()
+# 
+#     patterns = [
+#         (r"(burn|lose)\s+(\d+)\s+calories.*?(day|week|month)", "Calorie Burn"),
+#         (r"(walk|step).?(\d+).?(steps).*?(day|week|month)", "Steps"),
+#         (r"(workout|exercise|train).?(\d+).?(time|session|day).*?(day|week|month)", "Workouts"),
+#         (r"(workout|exercise|train)\s+(\d+)\s+(day|week|month)", "Workouts")
+#     ]
+# 
+#     for pattern, goal_type in patterns:
+#         match = re.search(pattern, goal_text)
+#         if match:
+#             numbers = [int(n) for n in re.findall(r'\d+', goal_text)]
+#             time_match = re.search(r"(day|week|month)", goal_text)
+# 
+#             if not numbers or not time_match:
+#                 return {"valid": False, "error": "Couldn't extract a number or timeframe from your goal."}
+# 
+#             target = numbers[0]
+#             timeframe = time_match.group(1).capitalize()
+# 
+#             if not is_realistic(goal_type, target, timeframe):
+#                 return {"valid": False, "error": f"That goal seems too aggressive for a {timeframe.lower()} timeframe."}
+# 
+#             return {
+#                 "valid": True,
+#                 "goal_type": goal_type,
+#                 "target": target,
+#                 "timeframe": timeframe
+#             }
+# 
+#     return {"valid": False, "error": "Sorry, I couldn't understand that goal. Try rephrasing it!"}
+# 
+# # --- 4. Streamlit UI ---
+# def goal_creation(user_id):
+#     st.header("What's Your Fitness Goal?")
+#     st.markdown("Type your fitness goal below, like:")
+#     st.markdown("- I want to burn 3000 calories in 7 days")
+#     st.markdown("- I want to walk 100,000 steps in 14 days")
+#     st.markdown("- I want to Workout 5 times in 1 week")
+# 
+#     user_input = st.text_input("Enter your fitness goal:")
+# 
+#     col1, col2 = st.columns(2)
+#     with col1:
+#         start_date = st.date_input("Start Date", value=date.today())
+#     with col2:
+#         end_date = st.date_input("End Date", value=date.today())
+# 
+#     # Initialize session state for submission
+#     if "goal_submitted" not in st.session_state:
+#         st.session_state.goal_submitted = False
+#     if "navigate_to_plan" not in st.session_state:
+#         st.session_state.navigate_to_plan = False
+# 
+#     if st.button("Submit Goal"):
+#         if start_date > end_date:
+#             st.error("End date must be after start date.")
+#             return
+# 
+#         parsed_goal = fitness_goal(user_input)
+# 
+#         if parsed_goal["valid"]:
+#             days_between = (end_date - start_date).days + 1
+#             if days_between <= 1:
+#                 timeframe = "Day"
+#             elif days_between <= 7:
+#                 timeframe = "Week"
+#             else:
+#                 timeframe = "Month"
+# 
+#             if not is_realistic(parsed_goal["goal_type"], parsed_goal["target"], timeframe):
+#                 st.error(f"That goal seems too aggressive for a {timeframe.lower()} timeframe given the chosen date range.")
+#                 return
+# 
+#             response = save_goal_to_bigquery({
+#                 "user_id": user_id,
+#                 "goal_type": parsed_goal["goal_type"],
+#                 "target": parsed_goal["target"],
+#                 "timeframe": timeframe,
+#                 "start_date": start_date,
+#                 "end_date": end_date
+#             })
+# 
+#             if response["status"] == "success":
+#                 goal_str = f"{parsed_goal['goal_type']} - {parsed_goal['target']} per {timeframe}"
+#                 st.success(f"Goal saved successfully: {goal_str}")
+#                 st.session_state.goal_submitted = True  # ✅ set flag
+#             else:
+#                 st.error(f"There was an issue saving your goal: {response['message']}")
+#         else:
+#             st.error(parsed_goal["error"])
+# 
+#     # Display the navigation button after successful submission
+#     if st.session_state.goal_submitted:
+#         if st.button("✅ I agree, take me to my workout plan"):
+#             st.session_state.navigate_to_plan = True
+# 
+#     # Navigate to the workout plan
+#     if st.session_state.navigate_to_plan:
+#         goal_plan_display_ui(user_id)
+# 
+# # Call this inside the desired tab or section
+# user_id = "user1"  # You can replace this with dynamic user ID retrieval
+# goal_creation(user_id)
+
         # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Plan Display UI (Kei) ===
             # Call goal_plan_display_ui from modules.py 
         user_id = 'user1'

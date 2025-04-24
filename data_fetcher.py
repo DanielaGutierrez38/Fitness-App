@@ -681,6 +681,7 @@ def save_goal(user_id):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Creation Interface (Darianne) ===
     return "Achieve to burn 1000 calories in a week"
     #return goal?
+    
 
 def ai_call_for_planner(user_id):
     # === Design, Implement and Test AI Integration for Goal Planning (Daniela) ===
@@ -775,8 +776,35 @@ def save_plan(user_id, ai_response, client=None):
 
 def mark_task(user_id, task_id, date_str, task_index, is_completed, client=None):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Progress Tracking (Ariana) ===
-    # For users to mark/unmark activities as completed
-    pass
+    if client is None:
+        client = bigquery.Client()
+
+    # Use MERGE to UPSERT the task completion status
+    merge_query = """
+        MERGE `bytemeproject.UserTaskCompletion` AS target
+        USING (SELECT @user_id AS user_id, @task_id AS task_id, @date_str AS date_str, @task_index AS task_index) AS source
+        ON target.user_id = source.user_id AND
+           target.task_id = source.task_id AND
+           target.date_str = source.date_str AND
+           target.task_index = source.task_index
+        WHEN MATCHED THEN
+            UPDATE SET completed = @completed, last_updated = CURRENT_TIMESTAMP()
+        WHEN NOT MATCHED THEN
+            INSERT (user_id, task_id, date_str, task_index, completed)
+            VALUES (source.user_id, source.task_id, source.date_str, source.task_index, @completed)
+    """
+
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("user_id", "STRING", user_id),
+            bigquery.ScalarQueryParameter("task_id", "STRING", task_id),
+            bigquery.ScalarQueryParameter("date_str", "STRING", date_str),
+            bigquery.ScalarQueryParameter("task_index", "INT64", task_index),
+            bigquery.ScalarQueryParameter("completed", "BOOL", is_completed),
+        ]
+    )
+
+    client.query(merge_query, job_config=job_config).result()
 
 def get_progress_data(user_id, task_id, client=None):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Progress Tracking (Ariana) ===
@@ -784,28 +812,48 @@ def get_progress_data(user_id, task_id, client=None):
     if client is None:
         client = bigquery.Client()
 
-    query = f"""
+    # Step 1: Get the plan content
+    plan_query = """
         SELECT content
         FROM `bytemeproject.UserTaskPlans`
         WHERE user_id = @user_id AND task_id = @task_id
         LIMIT 1
     """
-    job_config = bigquery.QueryJobConfig(
+    plan_config = bigquery.QueryJobConfig(
         query_parameters=[
             bigquery.ScalarQueryParameter("user_id", "STRING", user_id),
             bigquery.ScalarQueryParameter("task_id", "STRING", task_id),
         ]
     )
-    query_job = client.query(query, job_config=job_config)
-    results = list(query_job.result())
-
-    if not results:
+    plan_result = list(client.query(plan_query, job_config=plan_config).result())
+    if not plan_result:
         return {}
 
-    # Deserialize JSON plan
-    content = results[0].content
+    plan_content = plan_result[0].content
     try:
-        plan = json.loads(content)
-        return plan
+        plan = json.loads(plan_content)
     except json.JSONDecodeError:
         return {}
+
+    # Step 2: Get completion data
+    completion_query = """
+        SELECT date_str, task_index, completed
+        FROM `bytemeproject.UserTaskCompletion`
+        WHERE user_id = @user_id AND task_id = @task_id
+    """
+    completion_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("user_id", "STRING", user_id),
+            bigquery.ScalarQueryParameter("task_id", "STRING", task_id),
+        ]
+    )
+    completion_results = client.query(completion_query, job_config=completion_config).result()
+    completion_status = {(row.date_str, row.task_index): row.completed for row in completion_results}
+
+    # Step 3: Merge completion into the plan
+    for date_str, tasks in plan.items():
+        for idx, task in enumerate(tasks):
+            key = (date_str, idx)
+            task["completed"] = completion_status.get(key, False)
+
+    return plan
