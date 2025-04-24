@@ -98,7 +98,10 @@ def get_user_sensor_data(user_id, workout_id, client=bigquery.Client(project="ke
         print(f"Error fetching BigQuery data: {e}")
         return None
 
-def get_user_workouts(user_id, client=bigquery.Client()):
+def get_user_workouts(user_id, client=None):
+    if client is None:
+        client = bigquery.Client()
+    
     query = f"""
         SELECT
             WorkoutId,
