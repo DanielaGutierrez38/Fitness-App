@@ -55,7 +55,9 @@ users = {
 }
 
 #asked Gemini for help on how to write the query since it needed a lot of parameters
-def get_user_sensor_data(user_id, workout_id, client=bigquery.Client(project="keishlyanysanabriatechx25")):
+def get_user_sensor_data(user_id, workout_id, client):
+    if client is None:
+        client = bigquery.Client(project="keishlyanysanabriatechx25")
 
     '''Fetches data from BigQuery using a given SQL query.
 
