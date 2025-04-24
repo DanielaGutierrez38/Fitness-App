@@ -1,39 +1,39 @@
-# #############################################################################
-# # data_fetcher_test.py
-# #
-# # This file contains tests for data_fetcher.py.
-# #
-# # You will write these tests in Unit 3.
-# #############################################################################
-# import unittest
-# import json
-# from unittest.mock import patch, MagicMock
-# from google.cloud import bigquery
-# import os
-# import datetime
-# import pytz
-# import sys
-# from data_fetcher import get_user_sensor_data, get_genai_advice, load_dotenv, vertexai, get_user_profile, ai_call_for_planner
-# from vertexai.generative_models import GenerativeModel
-# from data_fetcher import _vertexai_initialized
-# from dotenv import load_dotenv
+#############################################################################
+# data_fetcher_test.py
+#
+# This file contains tests for data_fetcher.py.
+#
+# You will write these tests in Unit 3.
+#############################################################################
+import unittest
+import json
+from unittest.mock import patch, MagicMock
+from google.cloud import bigquery
+import os
+import datetime
+import pytz
+import sys
+from data_fetcher import get_user_sensor_data, get_genai_advice, load_dotenv, vertexai, get_user_profile, ai_call_for_planner
+from vertexai.generative_models import GenerativeModel
+from data_fetcher import _vertexai_initialized
+from dotenv import load_dotenv
 
-# class MockGenerativeModel: #mock the GenAI model
-#     def __init__(self, expected_message, *args, **kwargs):
-#         self.expected_message = expected_message
+class MockGenerativeModel: #mock the GenAI model
+    def __init__(self, expected_message, *args, **kwargs):
+        self.expected_message = expected_message
 
-#     def generate_content(self, *args, **kwargs): #mock a response from the model
-#         mock_response = MagicMock()
-#         mock_response.candidates = [MagicMock()]
-#         mock_response.candidates[0].content.parts = [MagicMock()]
-#         mock_response.candidates[0].content.parts[0].text.strip.return_value = self.expected_message
-#         return mock_response
+    def generate_content(self, *args, **kwargs): #mock a response from the model
+        mock_response = MagicMock()
+        mock_response.candidates = [MagicMock()]
+        mock_response.candidates[0].content.parts = [MagicMock()]
+        mock_response.candidates[0].content.parts[0].text.strip.return_value = self.expected_message
+        return mock_response
 
-# class TestDataFetcher(unittest.TestCase):
+class TestDataFetcher(unittest.TestCase):
 
-#     def setUp(self): 
-#         global _vertexai_initialized
-#         _vertexai_initialized = False
+    def setUp(self): 
+        global _vertexai_initialized
+        _vertexai_initialized = False
 
 #     """Tests for get_user_sensor_data_success, these tests were created with help from Gemini"""
 #     @patch('google.cloud.bigquery.Client')
@@ -162,51 +162,51 @@
 
 #         self.assertEqual(result, large_dataset)
     
-#     """Tests for get_genai_advice, these tests were created with help from Gemini"""
+    """Tests for get_genai_advice, these tests were created with help from Gemini"""
     
-#     @patch('data_fetcher.vertexai.init')
-#     @patch('os.environ.get')
-#     @patch('random.choice')
-#     @patch('random.randint')
-#     @patch('data_fetcher.datetime')  
-#     @patch('data_fetcher.GenerativeModel')
-#     @patch('data_fetcher.get_user_workouts')
-#     def test_get_genai_advice_success(self, mock_get_user_workouts, mock_generative_model, mock_datetime_module, mock_randint, mock_choice, mock_os_environ_get, mock_vertexai_init):
-#         from data_fetcher import get_genai_advice
+    @patch('data_fetcher.vertexai.init')
+    @patch('os.environ.get')
+    @patch('random.choice')
+    @patch('random.randint')
+    @patch('data_fetcher.datetime')  
+    @patch('data_fetcher.GenerativeModel')
+    @patch('data_fetcher.get_user_workouts')
+    def test_get_genai_advice_success(self, mock_get_user_workouts, mock_generative_model, mock_datetime_module, mock_randint, mock_choice, mock_os_environ_get, mock_vertexai_init):
+        from data_fetcher import get_genai_advice
 
-#         mock_os_environ_get.side_effect = lambda key, default=None: {
-#         "PROJECT_ID": "test_project",  
-#         "TIMEZONE": "America/New_York", 
-#         }.get(key, default)
+        mock_os_environ_get.side_effect = lambda key, default=None: {
+        "PROJECT_ID": "test_project",  
+        "TIMEZONE": "America/New_York", 
+        }.get(key, default)
 
-#         mock_choice.return_value = 'https://test.image.com'
-#         mock_randint.return_value = 12345
+        mock_choice.return_value = 'https://test.image.com'
+        mock_randint.return_value = 12345
 
-#         # Create a mock datetime class with a mock now() method
-#         mock_datetime_class = MagicMock()
-#         mock_now = MagicMock()
-#         mock_now.strftime.return_value = "2024-01-01 12:00:00 "
-#         mock_datetime_class.now.return_value = mock_now
-#         mock_datetime_module.datetime = mock_datetime_class
+        # Create a mock datetime class with a mock now() method
+        mock_datetime_class = MagicMock()
+        mock_now = MagicMock()
+        mock_now.strftime.return_value = "2024-01-01 12:00:00 "
+        mock_datetime_class.now.return_value = mock_now
+        mock_datetime_module.datetime = mock_datetime_class
 
-#         expected_message = "Stay strong!"
-#         mock_generative_model.return_value = MockGenerativeModel(expected_message)
+        expected_message = "Stay strong!"
+        mock_generative_model.return_value = MockGenerativeModel(expected_message)
 
-#         # Configure the return value for the mocked get_user_workouts
-#         mock_get_user_workouts.return_value = [
-#             {"workout_id": 1, "name": "Running", "duration": 30, "date": "2025-04-01"},
-#             {"workout_id": 2, "name": "Weightlifting", "sets": 3, "reps": 10, "date": "2025-04-03"},
-#         ]
+        # Configure the return value for the mocked get_user_workouts
+        mock_get_user_workouts.return_value = [
+            {"workout_id": 1, "name": "Running", "duration": 30, "date": "2025-04-01"},
+            {"workout_id": 2, "name": "Weightlifting", "sets": 3, "reps": 10, "date": "2025-04-03"},
+        ]
 
-#         result = get_genai_advice("test_user")
+        result = get_genai_advice("test_user")
 
-#         self.assertEqual(result['advice_id'], 12345)
-#         self.assertEqual(result['content'], expected_message)
-#         self.assertEqual(result['image'], 'https://test.image.com')
-#         self.assertEqual(result['timestamp'], "2024-01-01 12:00:00 ")
-#         #mock_vertexai_init.assert_called_once_with(project="test_project", location="us-central1")
-#         mock_datetime_class.now.assert_called_once()
-#         mock_get_user_workouts.assert_called_once_with("test_user") 
+        self.assertEqual(result['advice_id'], 12345)
+        self.assertEqual(result['content'], expected_message)
+        self.assertEqual(result['image'], 'https://test.image.com')
+        self.assertEqual(result['timestamp'], "2024-01-01 12:00:00 ")
+        #mock_vertexai_init.assert_called_once_with(project="test_project", location="us-central1")
+        mock_datetime_class.now.assert_called_once()
+        mock_get_user_workouts.assert_called_once_with("test_user") 
 
 
 # # Imports for get_user_posts testing
