@@ -140,10 +140,13 @@ def get_user_workouts(user_id, client=None):
     return workouts
 
 # Function fixed by Claude: "Fix code so that it has job_config"
-def get_user_profile(user_id, client=bigquery.Client(project="keishlyanysanabriatechx25")):
+def get_user_profile(user_id, client=None):
     # function: get_user_profile
     # input: user_id (str) - the ID of the user whose profile is being fetched
     # output: dict - contains full_name, username, date_of_birth, profile_image, and friends list
+
+    if client is None:
+        client = bigquery.Client(project="keishlyanysanabriatechx25")
     
     query = """
         SELECT
@@ -192,7 +195,7 @@ Returns a list of a user's posts. Some data in a post may not be populated.
 Input: user_id
 Output: A list of posts. Each post is a dictionary with keys user_id, post_id, timestamp, content, and image." 
 '''
-def get_user_posts(user_id, client=bigquery.Client()):
+def get_user_posts(user_id, client=None):
     """Returns a list of a user's posts from the BigQuery database.
 
     Args:
@@ -202,6 +205,10 @@ def get_user_posts(user_id, client=bigquery.Client()):
         list: A list of dictionaries, each representing a post with keys:
             'user_id', 'post_id', 'timestamp', 'content', 'image', 'username', and 'user_image'.
     """
+
+    if client is None:
+        client = bigquery.Client()
+
     # Query to fetch posts for the given user_id and join with Users table
     query = f"""
         SELECT p.PostId, p.AuthorId, p.Timestamp, p.Content, p.ImageUrl as PostImageUrl,
@@ -240,7 +247,7 @@ def get_user_posts(user_id, client=bigquery.Client()):
 Function created by Claude AI: "create a function that adds by using these lines, it adds the post to the database:
 post_content = f"I've taken {total_steps} steps in my fitness journey! #FitnessGoals" add_post_to_database(userId, post_content)"
 '''
-def add_post_to_database(user_id, content, image_url=None, client=bigquery.Client()):
+def add_post_to_database(user_id, content, image_url=None, client=None):
     """Adds a post to the BigQuery database.
    
     Args:
@@ -251,6 +258,10 @@ def add_post_to_database(user_id, content, image_url=None, client=bigquery.Clien
     Returns:
         bool: True if successful, False otherwise.
     """
+
+    if client is None:
+        client = bigquery.Client()
+
     try:
         # Generate a unique post ID (you might have a different approach)
         import uuid
@@ -322,11 +333,14 @@ def get_genai_advice(user_id):
     return {'advice_id': id, 'timestamp': advice_timestamp, 'content' : response.candidates[0].content.parts[0].text.strip(), 'image' : image}
 
 # Created by ChatGPT to "make a function that checks if the username is a friend of user_id and if that friend exists in the database"
-def get_friend_data(user_id, friend_username, client=bigquery.Client()):
+def get_friend_data(user_id, friend_username, client=None):
     """
     Checks if the username exists, and if it's a valid friend (not yourself),
     determines if the two users are friends.
     """
+
+    if client is None:
+        client = bigquery.Client()
 
     # Step 1: Look up UserId of friend_username
     get_friend_id_query = """
@@ -372,10 +386,13 @@ def get_friend_data(user_id, friend_username, client=bigquery.Client()):
         return f"You and '{friend_username}' are not friends yet."
 
 # Function mostly made by ChatGPT: "Following the database structure, create a function that lets the user send a friend request"
-def send_friend_request(user_id, friend_username, client=bigquery.Client()):
+def send_friend_request(user_id, friend_username, client=None):
     """
     Sends a friend request from user_id to the user with friend_username.
     """
+
+    if client is None:
+        client = bigquery.Client()
 
     # Step 1: Resolve friend_username to friend_id
     get_friend_id_query = """
@@ -448,11 +465,14 @@ def send_friend_request(user_id, friend_username, client=bigquery.Client()):
     return f"Friend request sent to {friend_username}!"
 
 # Function mostly made by ChatGPT: "Following the database structure, create a function that lets the user remove a friend"
-def remove_friend(user_id, friend_username, client=bigquery.Client()):
+def remove_friend(user_id, friend_username, client=None):
     """
     Removes the friend relationship between user_id and friend_username.
     First resolves friend_username to UserId, then deletes the friendship if it exists.
     """
+
+    if client is None:
+        client = bigquery.Client()
 
     # Resolve Username to UserId
     get_friend_id_query = """
@@ -487,10 +507,13 @@ def remove_friend(user_id, friend_username, client=bigquery.Client()):
     return f"Friendship with {friend_username} has been removed."
 
 # Function created by ChatGPT: "create a function that checks the pending requests that the user_id currently has, it will be shown in an already created tab"
-def get_pending_requests(user_id, client=bigquery.Client()):
+def get_pending_requests(user_id, client=None):
     """
     Returns a list of usernames who have sent a friend request to the given user_id.
     """
+
+    if client is None:
+        client = bigquery.Client()
     
     query = """
     SELECT U.Username AS SenderUsername, FR.RequesterId
@@ -512,7 +535,10 @@ def get_pending_requests(user_id, client=bigquery.Client()):
     return [{"username": row["SenderUsername"], "user_id": row["RequesterId"]} for row in results]
 
 # Following 2 functions partially created by ChatGPT: "create the lines to accept and decline the friend requests. it should use the following functions to save/decline those friends: accept_friend_request"
-def accept_friend_request(current_user_id, requester_id, client=bigquery.Client()):
+def accept_friend_request(current_user_id, requester_id, client=None):
+    if client is None:
+        client = bigquery.Client()
+
     # Add friendship in one direction only
     insert_query = """
     INSERT INTO `keishlyanysanabriatechx25.bytemeproject.Friends` (UserId1, UserId2)
@@ -543,7 +569,10 @@ def accept_friend_request(current_user_id, requester_id, client=bigquery.Client(
 
     client.query(delete_query, job_config=delete_config).result()
 
-def decline_friend_request(current_user_id, requester_id, client=bigquery.Client()):
+def decline_friend_request(current_user_id, requester_id, client=None):
+    if client is None:
+        client = bigquery.Client()
+
     query = """
     DELETE FROM `keishlyanysanabriatechx25.bytemeproject.FriendRequests`
     WHERE RequesterId = @requester_id AND ReceiverId = @receiver_id
@@ -559,7 +588,7 @@ def decline_friend_request(current_user_id, requester_id, client=bigquery.Client
     client.query(query, job_config=config).result()
 
 #the query was generated by gemini. i described the tables to it and then i asked it to create the query so that it returns the friend's workout data
-def get_leaderboard_data(user_id, client=bigquery.Client(project="keishlyanysanabriatechx25")):
+def get_leaderboard_data(user_id, client=None):
     """
     Retrieves workout data for a given user and their friends
     (based on the Friends table with UserId1 and UserId2 columns)
@@ -572,6 +601,9 @@ def get_leaderboard_data(user_id, client=bigquery.Client(project="keishlyanysana
         dict: A dictionary where keys are UserIds (the initial user and their friends),
               and values are dictionaries containing 'distance', 'steps', and 'calories'.
     """
+    if client is None:
+        client = bigquery.Client(project="keishlyanysanabriatechx25")
+
     try:
         query = f"""
             SELECT
