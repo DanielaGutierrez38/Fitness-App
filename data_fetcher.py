@@ -55,7 +55,7 @@ users = {
 }
 
 #asked Gemini for help on how to write the query since it needed a lot of parameters
-def get_user_sensor_data(user_id, workout_id, client):
+def get_user_sensor_data(user_id, workout_id, client=None):
     if client is None:
         client = bigquery.Client(project="keishlyanysanabriatechx25")
 
@@ -679,13 +679,18 @@ def leaderboard_scoring_logic(user_id):
 
 def save_goal(user_id):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Creation Interface (Darianne) ===
-    return "Archieve to burn 1000 calories in a week"
+    return "Achieve to burn 1000 calories in a week"
     #return goal?
 
 def ai_call_for_planner(user_id):
-    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test AI Integration for Goal Planning (Daniela) ===
-    # Make a comment letting know the AI request/response format for when someone uses this function, they understand the format
-    #had to do this global vertexai variable to handle mocks in tests correctly
+    # === Design, Implement and Test AI Integration for Goal Planning (Daniela) ===
+    # AI Response Format:
+    # {
+    #     "Day 1": [{"activity": "Running", "duration": "30 minutes", "calories_goal": 200}],
+    #     ...
+    # },
+    # "general_tip": "Make sure to stretch before and after each workout."
+    
     global _vertexai_initialized
     load_dotenv()
     if not _vertexai_initialized:
@@ -694,26 +699,78 @@ def ai_call_for_planner(user_id):
         _vertexai_initialized = True
 
     workouts = get_user_workouts(user_id) 
-
     goal = save_goal(user_id)
-
     model = GenerativeModel("gemini-1.5-flash-002")
 
-    system_instruction = ("You are a the main fitness trainer for a fitness app. You are getting information about the user's past workouts in the 'workouts' list of dictionaries")
+    system_instruction = (
+        "You are the lead fitness trainer for a fitness app. You're getting user past workouts "
+        "in the 'workouts' list of dictionaries."
+    )
 
-    response = model.generate_content(f"""Based on the goal: '{goal}' and your knowledge of the user's past workouts: {workouts}, please generate a fitness plan. Return this plan as a Python dictionary where the keys are the day (e.g., 'Day 1', 'Day 2', ..., etc) and the values are the recommended workout(s) for that day (the user will enter the amount of days they plan for their goal, e.g. if they say their goal is for 30 days, do a 30 day plan and so on). Please provide specific exercises or types of activities. Take into consideration the user's past workouts to create a balanced and effective plan. The output should ONLY be a valid JSON dictionary, without any surrounding text or code blocks. Also please don't add line breaks""")
+    response = model.generate_content(f"""
+        Based on the goal: '{goal}' and your knowledge of the user's past workouts: {workouts}, please generate a fitness plan. 
+        Return a JSON dictionary with two keys: 
+        1. "plan" → a dictionary where the keys are the days (e.g., 'Day 1', 'Day 2', ..., etc), and values are a list of recommended workouts for that day. 
+           Each workout should be a dictionary with 'activity', 'duration', and 'calories_goal'.
+        2. "general_tip" → a single helpful fitness tip relevant to the entire plan.
 
-    task_id = random.randint(1, 1000000) #create a random id for the advice
+        Please provide specific exercises or types of activities. Take into consideration the user's past workouts to create a balanced and effective plan. The output should ONLY be a valid JSON dictionary, without any surrounding text or code blocks. Also please don't add line breaks.
+    """)
+
+    task_id = random.randint(1, 1000000)
 
     try:
-        plan_dictionary = json.loads(response.text)
-        return {'task_id': task_id, 'content': plan_dictionary} #return dictionary. content is another dictionary {day:}
+        full_response = json.loads(response.text)
+
+        plan_dictionary = full_response.get("plan", {})
+        general_tip = full_response.get("general_tip", "")
+
+        return {
+            'task_id': task_id,
+            'content': plan_dictionary,
+            'general_tip': general_tip
+        }
     except json.JSONDecodeError as e:
-        return {'task_id': task_id, 'content': f"Error: Could not parse the AI response as a JSON dictionary. Raw response: {response.text}. Error details: {e}"}
-    
+        return {
+            'task_id': task_id,
+            'content': f"Error: Could not parse the AI response as a JSON dictionary. Raw response: {response.text}. Error details: {e}"
+        }
+
+def save_plan(user_id, ai_response, client=bigquery.Client()):
+    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Plan Display UI (Kei) ===
+
+    # Extract values from the AI response
+    task_id = ai_response.get("task_id")
+    content_dict = ai_response.get("content", {})
+    general_tip = ai_response.get("general_tip", "")
+
+    # Safely convert content to JSON string (or leave error string if parsing failed)
+    if isinstance(content_dict, dict):
+        content_json = json.dumps(content_dict)
+    else:
+        content_json = str(content_dict)
+
+    # Prepare the row to insert
+    row = {
+        "task_id": task_id,
+        "user_id": user_id,
+        "content": content_json,
+        "general_tip": general_tip
+    }
+
+    # Define table ID
+    table_id = "keishlyanysanabriatechx25.bytemeproject.UserTaskPlans"
+
+    # Insert the row
+    errors = client.insert_rows_json(table_id, [row])
+
+    if errors:
+        print(f"❌ Failed to insert into BigQuery: {errors}")
+    else:
+        print("✅ Plan successfully saved to BigQuery!")
 
 def mark_task(user_id, task_id):
-    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Plan Display UI (Kei) ===
+    # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Progress Tracking (Ariana) ===
     # For users to mark/unmark activities as completed
     pass
 
