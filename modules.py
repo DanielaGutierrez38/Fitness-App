@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 # Import for display_post
 import requests
 import base64
-from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_leaderboard_data, ai_call_for_planner
+from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts, get_friend_data, send_friend_request, remove_friend, get_leaderboard_data, leaderboard_scoring_logic, save_goal, ai_call_for_planner, mark_task, get_progress_data
 
 # Import for user_profile
 import datetime
@@ -270,10 +270,7 @@ def display_user_profile(user_id):
         st.write(f"**@{user_profile['username']}**")
         
         # Add buttons for actions
-        #st.button("Edit Profile")
-        #st.button("Add Friend")
-        st.button("Edit Profile", key=f"edit_profile_{user_id}")
-        st.button("Add Friend", key=f"add_friend_{user_id}")
+        st.button("Edit Profile")
     
     # User details in right column
     with col2:
@@ -385,13 +382,186 @@ def display_user_profile(user_id):
             st.write("Unable to load activity data.")
             st.error(str(e))
 
-def friend_request_ui(user_id, friend_id):
+def friend_request_ui(user_id):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Friend Request Functionality (Kei) ===
     """
     Note: This function will call get_friend_data in data_fetcher.py to get the data of 
     the friend and send/receive friend requests for it to be reflected in the database
     """
-    pass
+    st.header("Friend Network")
+    
+    # Create tabs for different friend-related functions
+    tab1, tab2 = st.tabs(["Search Users", "Pending Requests"])
+    
+    # Tab 1: Search for users to send friend requests
+    with tab1:
+        st.subheader("Find Friends")
+        friend_username = st.text_input("Search for users by username")
+        
+        if friend_username:
+            search_results = get_friend_data(user_id, friend_username)
+
+            st.write(search_results)
+
+            if search_results == f"You and '{friend_username}' are not friends yet.":
+                if st.button(f"Send Friend Request to {friend_username}"):
+                    send_friend_request(user_id, friend_username)
+                    st.success(f"Friend request sent to {friend_username}!")
+            elif search_results == f"You and '{friend_username}' are friends.":
+                if st.button(f"Remove Friend"):
+                    remove_friend(user_id, friend_username)
+                    st.success(f"Removed {friend_username} from your friends.")
+
+            
+    #         if search_results and len(search_results) > 0:
+    #             st.write(f"Found {len(search_results)} users")
+                
+    #             for result in search_results:
+    #                 col1, col2 = st.columns([3, 1])
+                    
+    #                 with col1:
+    #                     st.write(f"**{result['username']}** ({result['display_name']})")
+                    
+    #                 with col2:
+    #                     # Check if this user is already a friend or has a pending request
+    #                     friendship_status = get_friend_data(user_id, result['user_id'])
+                        
+    #                     # Show appropriate button based on relationship status
+    #                     if not friendship_status:
+    #                         if st.button(f"Add Friend", key=f"add_{result['user_id']}"):
+    #                             # Send friend request
+    #                             save_friend_data(user_id, result['user_id'], action='send_request')
+    #                             st.success(f"Friend request sent to {result['username']}!")
+    #                             st.rerun()
+                        
+    #                     elif friendship_status.get('status') == 'pending_sent':
+    #                         st.info("Request Sent")
+    #                         if st.button("Cancel", key=f"cancel_{result['user_id']}"):
+    #                             save_friend_data(user_id, result['user_id'], action='cancel_request')
+    #                             st.success("Request canceled")
+    #                             st.rerun()
+                            
+    #                     elif friendship_status.get('status') == 'pending_received':
+    #                         accept_col, reject_col = st.columns(2)
+    #                         with accept_col:
+    #                             if st.button("Accept", key=f"accept_{result['user_id']}"):
+    #                                 save_friend_data(user_id, result['user_id'], action='accept_request')
+    #                                 st.success(f"You are now friends with {result['username']}!")
+    #                                 st.rerun()
+                            
+    #                         with reject_col:
+    #                             if st.button("Reject", key=f"reject_{result['user_id']}"):
+    #                                 save_friend_data(user_id, result['user_id'], action='reject_request')
+    #                                 st.success(f"Friend request rejected.")
+    #                                 st.rerun()
+                                        
+    #                     elif friendship_status.get('status') == 'friends':
+    #                         st.success("Friends")
+    #                         if st.button("Remove", key=f"remove_{result['user_id']}"):
+    #                             save_friend_data(user_id, result['user_id'], action='remove_friend')
+    #                             st.success(f"Removed {result['username']} from your friends.")
+    #                             st.rerun()
+    #         else:
+    #             st.info("No users found matching your search query.")
+    
+    # # Tab 2: Pending Friend Requests
+    # with tab2:
+    #     st.subheader("Pending Friend Requests")
+        
+    #     # Get all friends and filter by status
+    #     all_friendships = get_all_friends(user_id)
+        
+    #     # Filter incoming and outgoing requests
+    #     incoming_requests = [f for f in all_friendships if f.get('status') == 'pending_received']
+    #     outgoing_requests = [f for f in all_friendships if f.get('status') == 'pending_sent']
+        
+    #     # Display incoming requests
+    #     if incoming_requests:
+    #         st.markdown("### Requests Received")
+    #         for request in incoming_requests:
+    #             col1, col2, col3 = st.columns([3, 1, 1])
+                
+    #             with col1:
+    #                 st.write(f"**{request['username']}** ({request['display_name']})")
+                
+    #             with col2:
+    #                 if st.button("Accept", key=f"accept_tab_{request['user_id']}"):
+    #                     save_friend_data(user_id, request['user_id'], action='accept_request')
+    #                     st.success(f"You are now friends with {request['username']}!")
+    #                     st.rerun()
+                
+    #             with col3:
+    #                 if st.button("Reject", key=f"reject_tab_{request['user_id']}"):
+    #                     save_friend_data(user_id, request['user_id'], action='reject_request')
+    #                     st.success(f"Friend request rejected.")
+    #                     st.rerun()
+    #     else:
+    #         st.info("No pending friend requests received.")
+        
+    #     # Display outgoing requests
+    #     if outgoing_requests:
+    #         st.markdown("### Requests Sent")
+    #         for request in outgoing_requests:
+    #             col1, col2 = st.columns([4, 1])
+                
+    #             with col1:
+    #                 st.write(f"**{request['username']}** ({request['display_name']})")
+                
+    #             with col2:
+    #                 if st.button("Cancel", key=f"cancel_{request['user_id']}"):
+    #                     save_friend_data(user_id, request['user_id'], action='cancel_request')
+    #                     st.success(f"Friend request canceled.")
+    #                     st.rerun()
+    #     else:
+    #         st.info("No pending friend requests sent.")
+    
+    # # If a specific friend_username was provided, show their profile directly
+    # if friend_username:
+    #     st.sidebar.header("Friend Profile")
+        
+    #     # Get friend data including username, display name, etc.
+    #     friend_info = get_user_info(friend_username)  # This would be a separate function to get user profile info
+    #     friendship_status = get_friend_data(user_id, friend_username)
+        
+    #     if friend_info:
+    #         st.sidebar.subheader(f"{friend_info['username']} ({friend_info['display_name']})")
+            
+    #         # Show relationship status and appropriate actions
+    #         status = friendship_status.get('status') if friendship_status else 'none'
+            
+    #         if status == 'none':
+    #             if st.sidebar.button("Add Friend"):
+    #                 save_friend_data(user_id, friend_username, action='send_request')
+    #                 st.sidebar.success(f"Friend request sent to {friend_info['username']}!")
+    #                 st.rerun()
+                        
+    #         elif status == 'pending_sent':
+    #             st.sidebar.info("Friend request sent.")
+    #             if st.sidebar.button("Cancel Request"):
+    #                 save_friend_data(user_id, friend_username, action='cancel_request')
+    #                 st.sidebar.success("Friend request canceled.")
+    #                 st.rerun()
+                        
+    #         elif status == 'pending_received':
+    #             col1, col2 = st.sidebar.columns(2)
+    #             with col1:
+    #                 if st.button("Accept"):
+    #                     save_friend_data(user_id, friend_username, action='accept_request')
+    #                     st.sidebar.success(f"You are now friends with {friend_info['username']}!")
+    #                     st.rerun()
+                            
+    #             with col2:
+    #                 if st.button("Reject"):
+    #                     save_friend_data(user_id, friend_username, action='reject_request')
+    #                     st.sidebar.success("Friend request rejected.")
+    #                     st.rerun()
+                            
+    #         elif status == 'friends':
+    #             st.sidebar.success("You are friends!")
+    #             if st.sidebar.button("Remove Friend"):
+    #                 save_friend_data(user_id, friend_username, action='remove_friend')
+    #                 st.sidebar.success(f"Removed {friend_info['username']} from your friends.")
+    #                 st.rerun()
 
 #created with help from gemini, asked it to create a leaderboard table based on leaderboard_data and to then also add the
 #friend's profile functionality
