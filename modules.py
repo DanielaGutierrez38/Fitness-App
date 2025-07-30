@@ -487,22 +487,20 @@ def create_leaderboard_ui(user_id):
     st.subheader(f"Leaderboard by {display_name}")
     st.table(sorted_leaderboard[columns_to_display].rename(columns=column_renaming))
 
-    # Profile viewing logic - no automatic calls
     selected_user_id = st.selectbox(
         "Select a friend to view their profile:",
         sorted_leaderboard['UserId'],
         format_func=get_full_name
     )
 
-    #Prevent profile from rendering automatically:
     if st.button(f"View Profile of {get_full_name(selected_user_id)}", key=f"view_profile_{selected_user_id}"):
-        # Use st.session_state to remember the selection
         st.session_state['selected_profile_to_display'] = selected_user_id
 
-    #Only display the profile if the user has explicitly clicked the button
     if 'selected_profile_to_display' in st.session_state:
         st.markdown("---")
-        display_user_profile(st.session_state['selected_profile_to_display'])
+        # Assuming you have a display_user_profile function
+        # display_user_profile(st.session_state['selected_profile_to_display'])
+        st.write(f"Profile for User ID: {st.session_state['selected_profile_to_display']}") # Placeholder
 
 def goal_creation_ui(user_id):
     # === PLACEHOLDER FOR ISSUE: Design, Implement and Test Goal Creation Interface (Darianne) ===
