@@ -9,6 +9,8 @@
 
 Deployed App Link: https://byte-me-44ac355vjq-uc.a.run.app/
 
+(**Important** The database is currently not working D:! This was a team project so I'm not the owner of the database; I believe something happened with the permissions for BigQuery, so I'm working on a solution so hopefully everything will be nice and readable again soon. Last updated: September 10, 2025)
+
 # How to Run the Streamlit App
 
 ### Running the Streamlit app locally
